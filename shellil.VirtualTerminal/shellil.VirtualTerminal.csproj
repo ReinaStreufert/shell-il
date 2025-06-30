@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <StartupObject>shellil.VirtualTerminal.Program</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="web\index.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="web\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="LibChromeDotNet">
+      <HintPath>..\..\ChromeDotNet\LibChromeDotNet\bin\Debug\net9.0\LibChromeDotNet.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
