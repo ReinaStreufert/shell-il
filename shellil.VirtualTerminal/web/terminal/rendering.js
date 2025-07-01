@@ -101,6 +101,7 @@
         ctx.textBaseline = "top";
         ctx.font = consts.font;
         ctx.fontKerning = "none";
+        ctx.imageSmoothingEnabled = false;
         if (metrics.monospace == null) {
             metrics.monospace = ((function () {
                 let precision = 200;
