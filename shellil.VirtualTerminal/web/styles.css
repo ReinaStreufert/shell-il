@@ -14,5 +14,5 @@ canvas {
 @font-face {
     font-family: "Source Code Pro";
     src: 
-        url("fonts/inconsolata.ttf") format('truetype');
+        url("fonts/sourceCodePro.ttf") format('truetype');
 }
