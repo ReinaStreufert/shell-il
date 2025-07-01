@@ -42,13 +42,13 @@ namespace shellil.VirtualTerminal
 
         public async Task<int> GetHeightAsync()
         {
-            return (int)Math.Round(((IJSNumber)await _Binding.CallPropertyAsync("getBufferHeight")).Value);
+            return (int)Math.Round(((IJSValue<double>)await _Binding.CallPropertyAsync("getBufferHeight")).Value);
         }
 
         public async Task<(int x, int y)> GetCursorPosAsync()
         {
-            int x = (int)Math.Round(((IJSNumber)await _Binding.GetAsync("cursorX")).Value);
-            int y = (int)Math.Round(((IJSNumber)await _Binding.GetAsync("cursorY")).Value);
+            int x = (int)Math.Round(((IJSValue<double>)await _Binding.GetAsync("cursorX")).Value);
+            int y = (int)Math.Round(((IJSValue<double>)await _Binding.GetAsync("cursorY")).Value);
             return (x, y);
         }
 

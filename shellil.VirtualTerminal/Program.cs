@@ -20,6 +20,7 @@ namespace shellil.VirtualTerminal
         {
             var buffer = await ctx.CreateBufferAsync(200);
             var view = await buffer.CreateViewport(0, 0);
+
             terminal.OnInputChar += async c =>
             {
                 await buffer.WriteAsync(c.ToString());
@@ -28,13 +29,34 @@ namespace shellil.VirtualTerminal
             };
             terminal.OnSpecialKey += async key =>
             {
-                if (key == TerminalSpecialKey.Backspace)
+                var cursorPos = await buffer.GetCursorPosAsync();
+                var bufferHeight = await buffer.GetHeightAsync();
+                if (key == TerminalSpecialKey.Enter)
                 {
-                    var cursorPos = await buffer.GetCursorPosAsync();
-                    await buffer.SetCursorPosAsync(cursorPos.x - 1, cursorPos.y);
-                    await buffer.WriteAsync(" ");
-                    await buffer.SetCursorPosAsync(cursorPos.x - 1, cursorPos.y);
+                    await buffer.WriteLineAsync();
+                }else if (key == TerminalSpecialKey.Backspace)
+                {
+                    if (cursorPos.x > 0)
+                    {
+                        await buffer.SetCursorPosAsync(cursorPos.x - 1, cursorPos.y);
+                        await buffer.WriteAsync(" ");
+                        await buffer.SetCursorPosAsync(cursorPos.x - 1, cursorPos.y);
+                    }
+                    else if (cursorPos.y > 0)
+                    {
+                        await buffer.SetCursorPosAsync(0, cursorPos.y - 1);
+                        await buffer.WriteAsync(new string(' ', buffer.Width));
+                        await buffer.SetCursorPosAsync(0, cursorPos.y - 1);
+                    }
                 }
+                if (key == TerminalSpecialKey.ArrowLeft && cursorPos.x > 0)
+                    await buffer.SetCursorPosAsync(cursorPos.x - 1, cursorPos.y);
+                else if (key == TerminalSpecialKey.ArrowRight && cursorPos.x + 1 < buffer.Width)
+                    await buffer.SetCursorPosAsync(cursorPos.x + 1, cursorPos.y);
+                else if (key == TerminalSpecialKey.ArrowUp && cursorPos.y > 0)
+                    await buffer.SetCursorPosAsync(cursorPos.x, cursorPos.y - 1);
+                else if (key == TerminalSpecialKey.ArrowDown && cursorPos.y + 1 < bufferHeight)
+                    await buffer.SetCursorPosAsync(cursorPos.x, cursorPos.y + 1);
                 await view.ScrollCursorIntoViewAsync();
                 await view.PresentAsync();
             };

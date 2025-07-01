@@ -28,8 +28,8 @@ namespace shellil.VirtualTerminal
 
         public async Task<(int x, int y)> GetScrollOffsetAsync()
         {
-            var x = (int)Math.Round(((IJSNumber)await _Binding.GetAsync("viewportX")).Value);
-            var y = (int)Math.Round(((IJSNumber)await _Binding.GetAsync("viewportX")).Value);
+            var x = (int)Math.Round(((IJSValue<double>)await _Binding.GetAsync("viewportX")).Value);
+            var y = (int)Math.Round(((IJSValue<double>)await _Binding.GetAsync("viewportX")).Value);
             return (x, y);
         }
 
