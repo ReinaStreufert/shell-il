@@ -6,8 +6,8 @@
         canvas.height = canvas.clientHeight * devicePixelRatio;
     }
 
-    let vtloop = function (vtdraw) {
-        vtdraw();
+    let vtloop = function (uptime, vtdraw) {
+        vtdraw(uptime);
         requestAnimationFrame(vtloop);
     }
 
@@ -24,7 +24,7 @@
             updateCanvasResolution(canvas);
         });
         document.fonts.load(consts.font).then(function () {
-            requestAnimationFrame(() => vtloop(vtdraw))
+            requestAnimationFrame((uptime) => vtloop(uptime, vtdraw))
         });
     });
 })();

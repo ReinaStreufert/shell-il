@@ -6,6 +6,7 @@
         let view = {
             viewportX: 0,
             viewportY: 0,
+            cursorState: "blink", // solid, blink, invisible
             buffer: buf
         }
         view.present = function () {
@@ -17,7 +18,6 @@
         }
         view.scrollCursorIntoView = function () {
             let viewSize = rendering.getViewportSize();
-            let srcOffset = { x: view.viewportX, y: view.viewportY };
             let cursorX = buf.cursorX;
             let cursorY = buf.cursorY;
             let viewSrcLeft = view.viewportX;
@@ -32,7 +32,6 @@
                 view.viewportY = cursorY;
             else if (cursorY > viewSrcBottom)
                 view.viewportY = - viewSize.h;
-
         }
         view.getSnapshot = function () {
             let viewSize = rendering.getViewportSize();
@@ -49,8 +48,16 @@
                     copiedRow[x] = srcRow[srcX];
                 }
             }
-            return copiedRows;
+            return {
+                w: copyW,
+                h: copyH,
+                rows: copiedRows,
+                cursorX: buf.cursorX - view.viewportY,
+                cursorY: buf.cursorY - view.viewportY,
+                cursorState: view.cursorState
+            };
         }
+        return view;
     };
 
     window.createTerminalBuffer = function (cols) {
@@ -58,7 +65,6 @@
             bufferWidth: cols,
             cursorX: 0,
             cursorY: 0,
-            cursorState: "blink", // solid, blink, invisible
             bg: consts.defaultFg,
             fg: consts.defaultBg
         };
@@ -109,5 +115,12 @@
                 advance();
             }
         }
+        buf.createViewport = function (xOffset, yOffset) {
+            let view = newViewport(buf);
+            view.viewportX = xOffset;
+            view.viewportY = yOffset;
+            return view;
+        }
+        return buf;
     }
 });
