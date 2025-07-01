@@ -16,6 +16,8 @@ namespace shellil.VirtualTerminal
     {
         public event Action<(int w, int h)>? OnResize;
         public event Action<IVirtualTerminalContext>? OnReady;
+        public event Action<char>? OnInputChar;
+        public event Action<TerminalSpecialKey>? OnSpecialKey;
 
         public IWebContent Content => _Content;
         public (int w, int h) WindowSize
@@ -56,6 +58,17 @@ namespace shellil.VirtualTerminal
                     OnResize?.Invoke(updatedSize);
                 }
             });
+            await documentBody.AddEventListenerAsync(Event.KeyDown, e =>
+            {
+                var key = e.Key;
+                if (key == null)
+                    return;
+                if (key.Length == 1)
+                    OnInputChar?.Invoke(key[0]);
+                else if (Enum.TryParse<TerminalSpecialKey>(key, out var specialKey))
+                    OnSpecialKey?.Invoke(specialKey);
+            });
+            
             OnReady?.Invoke(new VirtualTerminalContext(window, this));
         }
 
