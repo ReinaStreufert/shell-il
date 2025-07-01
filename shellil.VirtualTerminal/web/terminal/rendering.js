@@ -151,4 +151,4 @@
         updateCursor(uptime);
         snapshot.lastPresented = activeSnapshot;
     };
-});
+})();
