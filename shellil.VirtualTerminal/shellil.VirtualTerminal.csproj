@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="web\index.html" />
+    <None Remove="web\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -17,8 +17,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="LibChromeDotNet">
       <HintPath>..\..\ChromeDotNet\LibChromeDotNet\bin\Debug\net9.0\LibChromeDotNet.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
 
