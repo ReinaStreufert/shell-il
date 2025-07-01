@@ -12,7 +12,7 @@
         view.present = function () {
             rendering.setActiveViewport(view)
         }
-        view.scroll(x, y) = function () {
+        view.scroll = function (x, y) {
             view.viewportX += x;
             view.viewportY += y;
         }
@@ -42,6 +42,7 @@
             let copiedRows = new Array(copyH);
             for (let y = 0; y < copyH; y++) {
                 let copiedRow = new Array(copyW);
+                copiedRows[y] = copiedRow;
                 let srcRow = buf.rows[y + srcOffset.y];
                 for (let x = 0; x < copyW; x++) {
                     let srcX = x + srcOffset.x;
@@ -65,22 +66,23 @@
             bufferWidth: cols,
             cursorX: 0,
             cursorY: 0,
-            bg: consts.defaultFg,
-            fg: consts.defaultBg
+            bg: consts.defaultBg,
+            fg: consts.defaultFg
         };
         let newRow = function () {
             let row = new Array(cols);
             for (let i = 0; i < cols; i++) {
-                row.push({
+                row[i] = ({
                     bg: buf.bg,
                     fg: buf.fg,
-                    c: null
+                    c: ' '
                 });
             }
+            return row;
         };
         buf.rows = [newRow()];
         buf.getBufferHeight = function () {
-            return rows.length;
+            return buf.rows.length;
         };
         buf.lineFeed = function (lines) {
             let rows = buf.rows;
@@ -103,7 +105,7 @@
                 buf.lineFeed(y - h + 1);
             buf.cursorX = x;
             buf.cursorY = y;
-        }
+        };
         buf.write = function (text) {
             for (let i = 0; i < text.length; i++) {
                 let row = buf.rows[buf.cursorY];

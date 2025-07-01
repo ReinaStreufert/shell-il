@@ -34,11 +34,13 @@
         let monospace = metrics.monospace;
         let x = contiguous.x * monospace.w;
         let y = contiguous.y * monospace.h;
+        let text = contiguous.text;
         let len = text.length;
         ctx.fillStyle = contiguous.bg;
         ctx.fillRect(x, y, len * monospace.w, monospace.h);
         ctx.fillStyle = contiguous.fg;
-        ctx.fillText(contiguous.text, x, y);
+        if (text.trim())
+            ctx.fillText(contiguous.text, x, y);
     }
 
     let renderCursor = function (cursorX, cursorY) {
@@ -52,8 +54,8 @@
         let fgw = consts.cursorWidth / 2;
         ctx.fillStyle = `rgb(${contrastLow} ${contrastLow} ${contrastLow})`;
         ctx.fillRect(x, y, bgw, monospace.h);
-        ctx.fillStyle = `rgb(${contrastHigh} ${contrashHigh} ${contrastHigh})`;
-        ctx.fillRect(x, y, fgw, mmonospace.h);
+        ctx.fillStyle = `rgb(${contrastHigh} ${contrastHigh} ${contrastHigh})`;
+        ctx.fillRect(x, y, fgw, monospace.h);
     }
 
     let updateCursor = function (uptime) {
@@ -65,7 +67,7 @@
             isCursorVisible = false;
         else if (activeSnapshot.cursorState == "solid")
             isCursorVisible = true;
-        else if (active.cursorState == "blinking") {
+        else if (activeSnapshot.cursorState == "blink") {
             let presentUptime = uptime - snapshot.lastPresentTime;
             isCursorVisible = presentUptime % (consts.blinkInterval * 2) < consts.blinkInterval;
         }
@@ -73,7 +75,8 @@
         if (lastCursorDraw != null) {
             if (isCursorVisible && lastCursorDraw.x == activeSnapshot.cursorX && lastCursorDraw.y == activeSnapshot.cursorY)
                 return;
-            let oldCursorCell = (activeSnapshot.buf[lastCursorDraw.y])[lastCursorDraw.x];
+            let oldCursorRow = lastCursorDraw.y < activeSnapshot.h ? activeSnapshot.rows[lastCursorDraw.y] : null;
+            let oldCursorCell = oldCursorRow == null ? null : (lastCursorDraw.x < oldCursorRow.length ? oldCursorRow[lastCursorDraw.x] : null);
             renderText({
                 text: oldCursorCell.c,
                 bg: oldCursorCell.bg,
@@ -110,20 +113,21 @@
         }
         let viewportSize = rendering.getViewportSize();
         let activeSnapshot = snapshot.active;
-        let lastSnapshot = snapshot.lasPresented;
-        if (activeSnapshot != lastSnapshot) {
+        let lastSnapshot = snapshot.lastPresented;
+        if (activeSnapshot == lastSnapshot) {
             updateCursor(uptime);
             return;
         }
-        let scanW = Math.min(viewportSize.w, Math.max(activeSnapshot.w, lastSnapshot.w));
-        let scanH = Math.min(viewportSize.h, Math.max(activeSnapshot.h, lastSnapshot.h));
+        console.log(activeSnapshot);
+        let scanW = activeSnapshot.w;
+        let scanH = activeSnapshot.h;
         for (let y = 0; y < scanH; y++) {
             let contiguous = null;
             let activeRow = activeSnapshot.rows[y];
-            let oldRow = lastSnapshot[y];
+            let oldRow = lastSnapshot == null ? null : lastSnapshot[y];
             for (let x = 0; x < scanW; x++) {
                 let activeCell = activeRow[x];
-                let oldCell = oldRow[x];
+                let oldCell = oldRow == null ? null : oldRow[x];
                 if (activeCell == oldCell) {
                     contiguous = null;
                     continue;
@@ -147,6 +151,17 @@
                     y: y
                 };
             }
+            if (contiguous != null)
+                renderText(contiguous);
+        }
+        
+        if (lastSnapshot != null && Math.min(lastSnapshot.w, viewportSize.w) > activeSnapshot.w) {
+            let cropWidth = lastSnapshot.w - activeSnapshot.w;
+            ctx.clearRect(viewportSize.w - cropWidth, 0, cropWidth, viewportSize.h);
+        }
+        if (lastSnapshot != null && Math.min(lastSnapshot.h, viewportSize.h) > activeSnapshot.h) {
+            let cropHeight = lastSnapshot.h - activeSnapshot.h;
+            ctx.clearRect(0, viewportSize.y - cropHeight, viewportSize.w, cropHeight);
         }
         updateCursor(uptime);
         snapshot.lastPresented = activeSnapshot;

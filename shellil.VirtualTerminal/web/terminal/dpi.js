@@ -6,25 +6,21 @@
         canvas.height = canvas.clientHeight * devicePixelRatio;
     }
 
-    let vtloop = function (uptime, vtdraw) {
-        vtdraw(uptime);
+    let vtloop = function (uptime) {
+        vtcanvas.vtdraw(uptime);
         requestAnimationFrame(vtloop);
     }
 
     window.addEventListener("load", function (eload) {
         let canvas = document.getElementById("vt");
-        let vtdraw = vtcanvas.vtdraw;
-        let consts = vtcanvas.constants;
-        window.vtcanvas = {
-            element: canvas,
-            context: canvas.getContext("2d")
-        };
+        vtcanvas.element = canvas;
+        vtcanvas.context = canvas.getContext("2d");
         updateCanvasResolution(canvas);
         window.addEventListener("resize", function (eresize) {
             updateCanvasResolution(canvas);
         });
-        document.fonts.load(consts.font).then(function () {
-            requestAnimationFrame((uptime) => vtloop(uptime, vtdraw))
+        document.fonts.load(vtcanvas.constants.font).then(function () {
+            requestAnimationFrame((uptime) => vtloop(uptime));
         });
     });
 })();
