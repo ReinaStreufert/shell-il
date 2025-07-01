@@ -46,7 +46,7 @@
     let renderCursor = function (cursorX, cursorY) {
         let ctx = vtcanvas.context;
         let monospace = metrics.monospace;
-        let x = cursorX * monospace.w;
+        let x = cursorX * monospace.w + 1;
         let y = cursorY * monospace.h;
         let contrastHigh = Math.round((0.5 + (consts.cursorContrast / 2)) * 255);
         let contrastLow = Math.round((0.5 - (consts.cursorContrast / 2)) * 255);
