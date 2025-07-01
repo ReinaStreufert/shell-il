@@ -1,6 +1,6 @@
 ﻿(function () {
     let consts = {
-        font: "300 25px 'Source Code Pro'",
+        font: "300 25px 'Inconsolata'",
         defaultBg: "#000000",
         defaultFg: "#cccccc",
         blinkInterval: 500,

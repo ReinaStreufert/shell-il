@@ -40,7 +40,7 @@
         ctx.fillRect(x, y, len * monospace.w, monospace.h);
         ctx.fillStyle = contiguous.fg;
         if (text.trim())
-            ctx.fillText(contiguous.text, x, y);
+            ctx.fillText(contiguous.text, x, y + monospace.h / 2);
     }
 
     let renderCursor = function (cursorX, cursorY) {
@@ -98,7 +98,7 @@
         let canv = vtcanvas.element;
         let ctx = vtcanvas.context;
         
-        ctx.textBaseline = "top";
+        ctx.textBaseline = "middle";
         ctx.font = consts.font;
         ctx.fontKerning = "none";
         ctx.imageSmoothingEnabled = false;
