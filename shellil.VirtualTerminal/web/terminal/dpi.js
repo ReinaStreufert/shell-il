@@ -21,6 +21,7 @@
         });
         document.fonts.load(vtcanvas.constants.font).then(function () {
             requestAnimationFrame((uptime) => vtloop(uptime));
+            vtcanvas.vtload();
         });
     });
 })();

@@ -4,7 +4,7 @@
         defaultBg: "#000000",
         defaultFg: "#cccccc",
         blinkInterval: 500,
-        cursorWidth: 2,
+        cursorWidth: 4,
         cursorContrast: 1
     };
     window.vtcanvas = {

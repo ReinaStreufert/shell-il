@@ -90,7 +90,7 @@
                 for (let i = 0; i < lines; i++)
                     rows.push(newRow());
             } else if (lines < 0) {
-                rows.splice(0, 0 - lines);
+                rows.splice(rows.length + lines, 0 - lines);
             }
         };
         let advance = function () {
