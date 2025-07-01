@@ -12,7 +12,7 @@ canvas {
 }
 
 @font-face {
-    font-family: "Inconsolata";
+    font-family: "Source Code Pro";
     src: 
         url("fonts/inconsolata.ttf") format('truetype');
 }
