@@ -15,9 +15,17 @@ namespace shellil.VirtualTerminal
     public class VirtualTerminal : IWebApp, IVirtualTerminal
     {
         public event Action<(int w, int h)>? OnResize;
+        public event Action<IVirtualTerminalContext>? OnReady;
 
         public IWebContent Content => _Content;
-        public (int w, int h) WindowSize => throw new NotImplementedException();
+        public (int w, int h) WindowSize
+        {
+            get
+            {
+                lock (_WindowSizeLock)
+                    return _WindowSize;
+            }
+        }
 
         public VirtualTerminal()
         {
@@ -28,9 +36,6 @@ namespace shellil.VirtualTerminal
         private WebContent _Content = new WebContent();
         private (int w, int h) _WindowSize;
         private object _WindowSizeLock = new object();
-        private bool _FrontendReady = false;
-
-        
 
         public async Task OnStartupAsync(IAppContext context)
         {
@@ -42,24 +47,44 @@ namespace shellil.VirtualTerminal
             var documentBody = await window.GetDocumentBodyAsync();
             await documentBody.AddEventListenerAsync(Event.Resize, async () =>
             {
-                
+                var oldSize = _WindowSize;
+                var updatedSize = await getWindowSize(window);
+                if (updatedSize.w != oldSize.w || updatedSize.h != oldSize.h)
+                {
+                    lock (_WindowSizeLock)
+                        _WindowSize = updatedSize;
+                    OnResize?.Invoke(updatedSize);
+                }
             });
+            OnReady?.Invoke(new VirtualTerminalContext(window, this));
         }
 
-        public IVirtualTerminalBuffer CreateBuffer(int cols)
-        {
-            throw new NotImplementedException();
-        }
-
-        private async Task<(int w, int h)> GetWindowSize(IAppWindow window)
+        private async Task<(int w, int h)> getWindowSize(IAppWindow window)
         {
             await using (var viewportSizeJS = (IJSObject)await window.EvaluateJSExpressionAsync("vtcanvas.rendering.getViewportSize();"))
-            await using (var wGetter = await viewportSizeJS.BindGetterAsync("w"))
-            await using (var hGetter = await viewportSizeJS.BindGetterAsync("h"))
+            await using (var binding = await viewportSizeJS.BindAsync())
             {
-                int w = (int)Math.Round(((IJSNumber)await wGetter.GetValueAsync()).Value);
-                int h = (int)Math.Round(((IJSNumber)await wGetter.GetValueAsync()).Value);
+                int w = (int)Math.Round(((IJSNumber)await binding.GetAsync("w")).Value);
+                int h = (int)Math.Round(((IJSNumber)await binding.GetAsync("h")).Value);
                 return (w, h);
+            }
+        }
+
+        private class VirtualTerminalContext : IVirtualTerminalContext
+        {
+            public VirtualTerminalContext(IAppWindow window, IVirtualTerminal terminal)
+            {
+                _Window = window;
+                _Terminal = terminal;
+            }
+
+            private IVirtualTerminal _Terminal;
+            private IAppWindow _Window;
+
+            public async Task<IVirtualTerminalBuffer> CreateBufferAsync(int cols)
+            {
+                await using (var jsBuffer = (IJSObject)await _Window.EvaluateJSExpressionAsync($"createTerminalBuffer({cols})"))
+                    return new VirtualTerminalBuffer(await jsBuffer.BindAsync(), cols, _Terminal);
             }
         }
     }

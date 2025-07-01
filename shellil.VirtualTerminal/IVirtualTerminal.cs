@@ -9,31 +9,36 @@ namespace shellil.VirtualTerminal
     public interface IVirtualTerminal
     {
         public event Action<(int w, int h)>? OnResize;
+        public event Action<IVirtualTerminalContext> OnReady;
         public (int w, int h) WindowSize { get; }
-        public IVirtualTerminalBuffer CreateBuffer(int cols);
     }
 
-    public interface IVirtualTerminalBuffer
+    public interface IVirtualTerminalContext
+    {
+        public Task<IVirtualTerminalBuffer> CreateBufferAsync(int cols);
+    }
+
+    public interface IVirtualTerminalBuffer : IAsyncDisposable
     {
         public IVirtualTerminal Terminal { get; }
-        public int Width { get; set; }
-        public int Height { get; set; }
-        public int CursorX { get; set; }
-        public int CursorY { get; set; }
-        public string ForegroundColor { get; set; }
-        public string BackgroundColor { get; set; }
+        public int Width { get; }
+        public Task<int> GetHeightAsync();
+        public Task<(int x, int y)> GetCursorPosAsync();
+        public Task SetCursorPosAsync(int x, int y);
+        public Task SetForegroundColorAsync(string color);
+        public Task SetBackgroundColorAsync(string color);
         public Task<IBufferViewport> CreateViewport(int offsetX, int offsetY);
         public Task WriteAsync(string text);
-        public Task WriteLineAsync();
-        public Task LineFeedAsync();
+        public Task LineFeedAsync(int count);
     }
 
-    public interface IBufferViewport
+    public interface IBufferViewport : IAsyncDisposable
     {
-        public IVirtualTerminalBuffer SourceBuffer { get; set; }
-        public int OffsetX { get; set; }
-        public int OffsetY { get; set; }
-        public TerminalCursorState CursorState { get; set; }
+        public IVirtualTerminalBuffer SourceBuffer { get; }
+        public Task<(int x, int y)> GetScrollOffsetAsync();
+        public Task SetScrollOffsetAsync(int x, int y);
+        public Task ScrollAsync(int x, int y);
+        public Task SetCursorStyleAsync(TerminalCursorState cursorState);
         public Task ScrollCursorIntoViewAsync();
         public Task PresentAsync();
     }
