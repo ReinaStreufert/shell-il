@@ -27,7 +27,8 @@ canvas {
 input {
     width: 50%;
     height: 30px;
-    font: 300 20px 'JetBrains Mono';
+    font-family: "Ubuntu Mono";
+    font-size: 20px;
     color: black;
     outline: none;
     border: none;
@@ -36,8 +37,8 @@ input {
 }
 
 input::placeholder {
-    font-weight: bold;
     opacity: 0.5;
+    font-weight: bold;
 }
 
 @font-face {
@@ -55,4 +56,9 @@ input::placeholder {
 @font-face {
     font-family: "Inconsolata";
     src: url("fonts/inconsolata.ttf") format('truetype');
+}
+
+@font-face {
+    font-family: "Ubuntu Mono";
+    src: url("fonts/ubuntoMono.ttf"), url("ubuntuMono-Bold.ttf");
 }

@@ -9,10 +9,7 @@ namespace shellil.VirtualTerminal
 {
     public interface IVirtualTerminal
     {
-        public event Action<(int w, int h)>? OnResize;
-        public event Action<char>? OnInputChar;
-        public event Action<TerminalSpecialKey>? OnSpecialKey;
-        public event Action<IVirtualTerminalContext> OnReady;
+        public IVirtualTerminalClient Client { get; }
         public (int w, int h) WindowSize { get; }
     }
 
@@ -56,14 +53,5 @@ namespace shellil.VirtualTerminal
         Solid
     }
 
-    public enum TerminalSpecialKey
-    {
-        Backspace,
-        Enter,
-        Tab,
-        ArrowDown,
-        ArrowLeft,
-        ArrowRight,
-        ArrowUp
-    };
+    
 }

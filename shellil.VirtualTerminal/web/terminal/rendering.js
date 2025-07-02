@@ -20,6 +20,22 @@
         snapshot.lastPresentTime = snapshot.lastFrameTime;
     }
 
+    rendering.viewportPosFromClientPos = function (x, y) {
+        let monospace = metrics.monospace;
+        return {
+            x: x * window.devicePixelRatio / monospace.w,
+            y: y * window.devicePixelRatio / monospace.h
+        };
+    };
+
+    rendering.clientPosFromViewportPos = function (x, y) {
+        let monospace = metrics.monospace;
+        return {
+            x: Math.round(x * monospace.w / window.devicePixelRatio),
+            y: Math.round(y * monospace.h / window.devicePixelRatio)
+        };
+    }
+
     rendering.getViewportSize = function () {
         let canv = vtcanvas.element;
         let monospace = metrics.monospace;

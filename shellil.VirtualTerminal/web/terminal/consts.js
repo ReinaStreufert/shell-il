@@ -1,6 +1,6 @@
 ﻿(function () {
     let consts = {
-        font: "300 25px 'JetBrains Mono'",
+        font: "25px 'Ubuntu Mono'",
         defaultBg: "#000000",
         defaultFg: "#cccccc",
         blinkInterval: 500,

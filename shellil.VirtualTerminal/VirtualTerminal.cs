@@ -14,12 +14,8 @@ namespace shellil.VirtualTerminal
 {
     public class VirtualTerminal : IWebApp, IVirtualTerminal
     {
-        public event Action<(int w, int h)>? OnResize;
-        public event Action<IVirtualTerminalContext>? OnReady;
-        public event Action<char>? OnInputChar;
-        public event Action<TerminalSpecialKey>? OnSpecialKey;
-
         public IWebContent Content => _Content;
+        public IVirtualTerminalClient Client => _Client;
         public (int w, int h) WindowSize
         {
             get
@@ -29,15 +25,19 @@ namespace shellil.VirtualTerminal
             }
         }
 
-        public VirtualTerminal()
+        public VirtualTerminal(IVirtualTerminalClient client)
         {
+            _Client = client;
             _Content.AddManifestSources("/", Assembly.GetExecutingAssembly(), "shellil.VirtualTerminal.web");
             _Content.SetIndex();
         }
 
         private WebContent _Content = new WebContent();
+        private IVirtualTerminalClient _Client;
         private (int w, int h) _WindowSize;
         private object _WindowSizeLock = new object();
+        private double _WheelDeltaXBuild = 0d;
+        private double _WheelDeltaYBuild = 0d;
 
         public async Task OnStartupAsync(IAppContext context)
         {
@@ -48,29 +48,89 @@ namespace shellil.VirtualTerminal
             await frontendReady.Task;
             var documentBody = await window.GetDocumentBodyAsync();
             var vtElement = await documentBody.QuerySelectAsync("#vt");
-            await vtElement.AddEventListenerAsync(Event.Resize, async () =>
+            await vtElement.AddEventListenerAsync(Event.Resize, () => _ = HandleResizeAsync(window));
+            await vtElement.AddEventListenerAsync(Event.KeyDown, e => _ = HandleKeyDownAsync(e));
+            await vtElement.AddEventListenerAsync(Event.Wheel, e => _ = HandleWheelAsync(e, window));
+            await vtElement.AddEventListenerAsync(Event.MouseMove, e => _ = HandleMouseEventAsync(e, TerminalMouseEventType.MouseMove, window));
+            await vtElement.AddEventListenerAsync(Event.MouseDown, e => _ = HandleMouseEventAsync(e, TerminalMouseEventType.MouseDown, window));
+            await vtElement.AddEventListenerAsync(Event.MouseUp, e => _ = HandleMouseEventAsync(e, TerminalMouseEventType.MouseUp, window));
+            await _Client.OnReadyAsync(new VirtualTerminalContext(window, this));
+        }
+
+        private async Task HandleResizeAsync(IAppWindow window)
+        {
+            var oldSize = _WindowSize;
+            var updatedSize = await getWindowSize(window);
+            if (updatedSize.w != oldSize.w || updatedSize.h != oldSize.h)
             {
-                var oldSize = _WindowSize;
-                var updatedSize = await getWindowSize(window);
-                if (updatedSize.w != oldSize.w || updatedSize.h != oldSize.h)
+                lock (_WindowSizeLock)
+                    _WindowSize = updatedSize;
+                await _Client.OnViewportResizeAsync(updatedSize.w, updatedSize.h);
+            }
+        }
+
+        private async Task HandleKeyDownAsync(KeyboardEventArgs e)
+        {
+            var key = e.Key;
+            var modifiers = e.Modifiers;
+            if (key == null)
+                return;
+            if (key.Length == 1)
+                await _Client.OnInputCharAsync(key[0], modifiers);
+            else if (Enum.TryParse<TerminalSpecialKey>(key, out var specialKey))
+                await _Client.OnSpecialKeyAsync(specialKey, modifiers);
+        }
+
+        private async Task HandleWheelAsync(WheelEventArgs e, IAppWindow window)
+        {
+            var deltaX = e.DeltaX;
+            var deltaY = e.DeltaY;
+            double scrollX;
+            double scrollY;
+            if (e.Mode == WheelDeltaMode.Lines)
+            {
+                scrollX = deltaX;
+                scrollY = deltaY;
+            }
+            else if (e.Mode == WheelDeltaMode.Pixels)
+            {
+                await using (var viewportOffsetJs = (IJSObject)await window.EvaluateJSExpressionAsync($"vtcanvas.rendering.viewportPosFromClientPos({deltaX},{deltaY});"))
+                await using (var binding = await viewportOffsetJs.BindAsync())
                 {
-                    lock (_WindowSizeLock)
-                        _WindowSize = updatedSize;
-                    OnResize?.Invoke(updatedSize);
+                    scrollX = ((IJSValue<double>)await binding.GetAsync("x")).Value;
+                    scrollY = ((IJSValue<double>)await binding.GetAsync("y")).Value;
                 }
-            });
-            await vtElement.AddEventListenerAsync(Event.KeyDown, e =>
+            }
+            else if (e.Mode == WheelDeltaMode.Pages)
             {
-                var key = e.Key;
-                if (key == null)
-                    return;
-                if (key.Length == 1)
-                    OnInputChar?.Invoke(key[0]);
-                else if (Enum.TryParse<TerminalSpecialKey>(key, out var specialKey))
-                    OnSpecialKey?.Invoke(specialKey);
-            });
-            
-            OnReady?.Invoke(new VirtualTerminalContext(window, this));
+                var viewportSize = WindowSize;
+                scrollX = deltaX * viewportSize.w;
+                scrollY = deltaY * viewportSize.h;
+            }
+            else throw new NotImplementedException();
+            _WheelDeltaXBuild += scrollX;
+            _WheelDeltaYBuild += scrollY;
+            if (_WheelDeltaXBuild > 1 || _WheelDeltaYBuild > 1)
+            {
+                var viewOffsetX = (int)Math.Floor(_WheelDeltaXBuild);
+                var viewOffsetY = (int)Math.Floor(_WheelDeltaYBuild);
+                _WheelDeltaXBuild -= viewOffsetX;
+                _WheelDeltaYBuild -= viewOffsetY;
+                await _Client.OnUserScrollAsync(viewOffsetX, viewOffsetY);
+            }
+        }
+
+        private async Task HandleMouseEventAsync(MouseEventArgs e, TerminalMouseEventType type, IAppWindow window)
+        {
+            int posX;
+            int posY;
+            await using (var viewportPosJs = (IJSObject)await window.EvaluateJSExpressionAsync($"vtcanvas.rendering.viewportPosFromClientPos({e.ClientX},{e.ClientY});"))
+            await using (var binding = await viewportPosJs.BindAsync())
+            {
+                posX = (int)Math.Floor(((IJSValue<double>)await binding.GetAsync("x")).Value);
+                posY = (int)Math.Floor(((IJSValue<double>)await binding.GetAsync("y")).Value);
+            }
+            await _Client.OnMouseEventAsync(type, posX, posY);
         }
 
         private async Task<(int w, int h)> getWindowSize(IAppWindow window)
@@ -78,8 +138,8 @@ namespace shellil.VirtualTerminal
             await using (var viewportSizeJS = (IJSObject)await window.EvaluateJSExpressionAsync("vtcanvas.rendering.getViewportSize();"))
             await using (var binding = await viewportSizeJS.BindAsync())
             {
-                int w = (int)Math.Round(((IJSNumber)await binding.GetAsync("w")).Value);
-                int h = (int)Math.Round(((IJSNumber)await binding.GetAsync("h")).Value);
+                int w = (int)Math.Round(((IJSValue<double>)await binding.GetAsync("w")).Value);
+                int h = (int)Math.Round(((IJSValue<double>)await binding.GetAsync("h")).Value);
                 return (w, h);
             }
         }
