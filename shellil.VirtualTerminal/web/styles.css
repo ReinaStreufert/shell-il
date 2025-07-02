@@ -10,6 +10,7 @@ canvas {
     background-color: black;
     width: 100%;
     height: calc(100% - 30px);
+    outline: none;
 }
 
 .testbanner {
@@ -17,7 +18,6 @@ canvas {
     height: 30px;
     display: flex;
     flex-direction: row;
-    padding-top: 10px;
     padding-bottom: 0px;
     padding-left: 0;
     padding-right: 0;
@@ -26,7 +26,7 @@ canvas {
 
 input {
     width: 50%;
-    height: 20px;
+    height: 30px;
     font: 300 20px 'JetBrains Mono';
     color: black;
     outline: none;
