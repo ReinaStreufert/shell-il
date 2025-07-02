@@ -77,17 +77,20 @@
                 return;
             let oldCursorRow = lastCursorDraw.y < activeSnapshot.h ? activeSnapshot.rows[lastCursorDraw.y] : null;
             let oldCursorCell = oldCursorRow == null ? null : (lastCursorDraw.x < oldCursorRow.length ? oldCursorRow[lastCursorDraw.x] : null);
-            renderText({
-                text: oldCursorCell.c,
-                bg: oldCursorCell.bg,
-                fg: oldCursorCell.fg,
-                x: lastCursorDraw.x,
-                y: lastCursorDraw.y
-            });
+            if (oldCursorCell != null) {
+                renderText({
+                    text: oldCursorCell.c,
+                    bg: oldCursorCell.bg,
+                    fg: oldCursorCell.fg,
+                    x: lastCursorDraw.x,
+                    y: lastCursorDraw.y
+                });
+            }
         }
-        if (isCursorVisible) {
-            let x = activeSnapshot.cursorX;
-            let y = activeSnapshot.cursorY;
+        let x = activeSnapshot.cursorX;
+        let y = activeSnapshot.cursorY;
+        if (isCursorVisible && x >= 0 && y >= 0 && x < activeSnapshot.w && y < activeSnapshot.h) {
+            
             renderCursor(x, y);
             snapshot.lastCursorDraw = { x: x, y: y };
         } else snapshot.lastCursorDraw = null;

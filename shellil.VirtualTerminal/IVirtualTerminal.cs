@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LibChromeDotNet.HTML5;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -18,6 +19,9 @@ namespace shellil.VirtualTerminal
     public interface IVirtualTerminalContext
     {
         public Task<IVirtualTerminalBuffer> CreateBufferAsync(int cols);
+#if DEBUG
+        public IAppWindow GetAppWindow();
+#endif
     }
 
     public interface IVirtualTerminalBuffer : IAsyncDisposable

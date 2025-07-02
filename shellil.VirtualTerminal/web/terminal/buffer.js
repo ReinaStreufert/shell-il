@@ -27,11 +27,11 @@
             if (cursorX < viewSrcLeft)
                 view.viewportX = cursorX;
             else if (cursorX > viewSrcRight)
-                view.viewportX = cursorX - viewSize.w;
+                view.viewportX = cursorX - (viewSize.w - 1);
             if (cursorY < viewSrcTop)
                 view.viewportY = cursorY;
             else if (cursorY > viewSrcBottom)
-                view.viewportY = - viewSize.h;
+                view.viewportY = cursorY - (viewSize.h - 1);
         }
         view.getSnapshot = function () {
             let viewSize = rendering.getViewportSize();
@@ -53,7 +53,7 @@
                 w: copyW,
                 h: copyH,
                 rows: copiedRows,
-                cursorX: buf.cursorX - view.viewportY,
+                cursorX: buf.cursorX - view.viewportX,
                 cursorY: buf.cursorY - view.viewportY,
                 cursorState: view.cursorState
             };

@@ -1,4 +1,5 @@
 ﻿using LibChromeDotNet;
+using LibChromeDotNet.HTML5.DOM;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,10 +8,12 @@ using System.Threading.Tasks;
 
 namespace shellil.VirtualTerminal
 {
+    // all of this stuff is just for testing both the frontend and backend of the library and will all be deleted later.
     public class Program
     {
         public static async Task Main(string[] args)
         {
+            
             var terminal = new VirtualTerminal();
             terminal.OnReady += (ctx) => _ = OnReady(terminal, ctx);
             await terminal.LaunchAsync();
@@ -20,6 +23,13 @@ namespace shellil.VirtualTerminal
         {
             var buffer = await ctx.CreateBufferAsync(200);
             var view = await buffer.CreateViewport(0, 0);
+
+            var appWindow = ctx.GetAppWindow();
+            var docBody = await appWindow.GetDocumentBodyAsync();
+            var bgColorInput = await HTMLInputElement.FromDOMNodeAsync(await docBody.QuerySelectAsync("#bginput"));
+            var fgColorInput = await HTMLInputElement.FromDOMNodeAsync(await docBody.QuerySelectAsync("#fginput"));
+            bgColorInput.ValueChanged += async () => await buffer.SetBackgroundColorAsync(bgColorInput.Value);
+            fgColorInput.ValueChanged += async () => await buffer.SetForegroundColorAsync(fgColorInput.Value);
 
             terminal.OnInputChar += async c =>
             {

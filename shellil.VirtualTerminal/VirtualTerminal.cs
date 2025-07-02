@@ -47,7 +47,8 @@ namespace shellil.VirtualTerminal
                 await setInteropInitFunc.CallAsync(frontendReady.CompletionSignal);
             await frontendReady.Task;
             var documentBody = await window.GetDocumentBodyAsync();
-            await documentBody.AddEventListenerAsync(Event.Resize, async () =>
+            var vtElement = await documentBody.QuerySelectAsync("#vt");
+            await vtElement.AddEventListenerAsync(Event.Resize, async () =>
             {
                 var oldSize = _WindowSize;
                 var updatedSize = await getWindowSize(window);
@@ -58,7 +59,7 @@ namespace shellil.VirtualTerminal
                     OnResize?.Invoke(updatedSize);
                 }
             });
-            await documentBody.AddEventListenerAsync(Event.KeyDown, e =>
+            await vtElement.AddEventListenerAsync(Event.KeyDown, e =>
             {
                 var key = e.Key;
                 if (key == null)
@@ -99,6 +100,10 @@ namespace shellil.VirtualTerminal
                 await using (var jsBuffer = (IJSObject)await _Window.EvaluateJSExpressionAsync($"createTerminalBuffer({cols})"))
                     return new VirtualTerminalBuffer(await jsBuffer.BindAsync(), cols, _Terminal);
             }
+
+#if DEBUG
+            public IAppWindow GetAppWindow() => _Window;
+#endif
         }
     }
 }
