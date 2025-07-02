@@ -84,7 +84,7 @@ namespace shellil.VirtualTerminal
             return Task.CompletedTask;
         }
 
-        public async Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y)
+        public Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y)
         {
             return Task.CompletedTask;
         }
