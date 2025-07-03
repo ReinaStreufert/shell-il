@@ -115,8 +115,8 @@
             callback({
                 event: "MouseEvent",
                 type: clientEventCode,
-                x: viewportPos.x,
-                y: viewportPos.y
+                x: Math.floor(viewportPos.x),
+                y: Math.floor(viewportPos.y)
             });
         };
         canv.addEventListener("mousemove", e => dispatchMouseEvent(e, 0));
