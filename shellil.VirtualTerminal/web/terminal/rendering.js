@@ -138,7 +138,6 @@
             updateCursor(uptime);
             return;
         }
-        console.log(activeSnapshot);
         let scanW = activeSnapshot.w;
         let scanH = activeSnapshot.h;
         for (let y = 0; y < scanH; y++) {
@@ -174,14 +173,20 @@
             if (contiguous != null)
                 renderText(contiguous);
         }
-        
+        let monospace = metrics.monospace;
         if (lastSnapshot != null && Math.min(lastSnapshot.w, viewportSize.w) > activeSnapshot.w) {
-            let cropWidth = lastSnapshot.w - activeSnapshot.w;
-            ctx.clearRect(viewportSize.w - cropWidth, 0, cropWidth, viewportSize.h);
+            let cropX = activeSnapshot.w;
+            let cropY = 0;
+            let cropW = viewportSize.w - activeSnapshot.w;
+            let cropH = viewportSize.h;
+            ctx.clearRect(cropX * monospace.w, cropY, cropW * monospace.w, cropH * monospace.h);
         }
         if (lastSnapshot != null && Math.min(lastSnapshot.h, viewportSize.h) > activeSnapshot.h) {
-            let cropHeight = lastSnapshot.h - activeSnapshot.h;
-            ctx.clearRect(0, viewportSize.y - cropHeight, viewportSize.w, cropHeight);
+            let cropX = 0;
+            let cropY = activeSnapshot.h;
+            let cropW = viewportSize.w;
+            let cropH = viewportSize.h - activeSnapshot.h;
+            ctx.clearRect(cropX, cropY * monospace.h, cropW * monospace.w, cropH * monospace.h);
         }
         updateCursor(uptime);
         snapshot.lastPresented = activeSnapshot;
