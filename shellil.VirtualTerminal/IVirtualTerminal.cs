@@ -10,7 +10,6 @@ namespace shellil.VirtualTerminal
     public interface IVirtualTerminal
     {
         public IVirtualTerminalClient Client { get; }
-        public Task<(int w, int h)> GetViewportSizeAsync();
     }
 
     public interface IVirtualTerminalContext

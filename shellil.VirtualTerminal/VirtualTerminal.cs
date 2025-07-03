@@ -3,6 +3,7 @@ using LibChromeDotNet.ChromeInterop;
 using LibChromeDotNet.HTML5;
 using LibChromeDotNet.HTML5.DOM;
 using LibChromeDotNet.HTML5.JS;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,6 @@ namespace shellil.VirtualTerminal
 
         private WebContent _Content = new WebContent();
         private IVirtualTerminalClient _Client;
-        private (int w, int h) _WindowSize;
         private object _WindowSizeLock = new object();
         private double _WheelDeltaXBuild = 0d;
         private double _WheelDeltaYBuild = 0d;
@@ -38,20 +38,41 @@ namespace shellil.VirtualTerminal
             await using (var setInteropInitFunc = (IJSFunction)await window.EvaluateJSExpressionAsync("vtcanvas.setInteropInit"))
                 await setInteropInitFunc.CallAsync(frontendReady.CompletionSignal);
             await frontendReady.Task;
-
+            await using (var setInteropDispatcherFunc = (IJSFunction)await window.EvaluateJSExpressionAsync("vtcanvas.setInteropDispatcher"))
+            await using (var jsInteropHandler = await window.AddJSBindingAsync(async obj => await HandleDispatchMessage(obj)))
+                await setInteropDispatcherFunc.CallAsync(jsInteropHandler);
             await _Client.OnReadyAsync(new VirtualTerminalContext(window, this));
         }
 
-        
-
-        private async Task<(int w, int h)> getWindowSize(IAppWindow window)
+        private async Task HandleDispatchMessage(JObject messageData)
         {
-            await using (var viewportSizeJS = (IJSObject)await window.EvaluateJSExpressionAsync("vtcanvas.rendering.getViewportSize();"))
-            await using (var binding = await viewportSizeJS.BindAsync())
+            var eventName = messageData["event"]!.ToString();
+            if (eventName == "ViewportResize")
             {
-                int w = (int)Math.Round(((IJSValue<double>)await binding.GetAsync("w")).Value);
-                int h = (int)Math.Round(((IJSValue<double>)await binding.GetAsync("h")).Value);
-                return (w, h);
+                int width = (int)messageData["w"]!;
+                int height = (int)messageData["h"]!;
+                await _Client.OnViewportResizeAsync(width, height);
+            } else if (eventName == "InputChar")
+            {
+                var c = messageData["inputChar"]!.ToString()[0];
+                var modifiers = (TerminalModifierKeys)((int)messageData!["modifiers"]!);
+                await _Client.OnInputCharAsync(c, modifiers);
+            } else if (eventName == "SpecialKey")
+            {
+                var specialKey = (TerminalSpecialKey)((int)messageData["specialKeyCode"]!);
+                var modifiers = (TerminalModifierKeys)((int)messageData["modifiers"]!);
+                await _Client.OnSpecialKeyAsync(specialKey, modifiers);
+            } else if (eventName == "UserScroll")
+            {
+                var offsetX = (int)messageData["offsetX"]!;
+                var offsetY = (int)messageData["offsetY"]!;
+                await _Client.OnUserScrollAsync(offsetX, offsetY);
+            } else if (eventName == "MouseEvent")
+            {
+                var mouseEventType = (TerminalMouseEventType)((int)messageData["type"]!);
+                var x = (int)messageData["x"]!;
+                var y = (int)messageData["y"]!;
+                await _Client.OnMouseEventAsync(mouseEventType, x, y);
             }
         }
 

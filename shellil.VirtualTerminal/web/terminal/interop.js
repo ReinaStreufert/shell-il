@@ -31,11 +31,11 @@
             let viewportSize = vtcanvas.rendering.getViewportSize();
             if (viewportSize.w != eventState.lastViewportSize.w || viewportSize.h != eventState.lastViewportSize.h) {
                 eventState.lastViewportSize = viewportSize;
-                callback(JSON.stringify({
+                callback({
                     event: "ViewportResize",
                     w: viewportSize.w,
                     h: viewportSize.h
-                }));
+                });
             };
         });
         let getModifierFlags = function (e) {
@@ -54,20 +54,20 @@
         canv.addEventListener("keydown", function (e) {
             let key = e.key;
             if (key.length == 1) {
-                callback(JSON.stringify({
+                callback({
                     event: "InputChar",
                     inputChar: key[0],
                     modifiers: getModifierFlags(e)
-                }));
+                });
                 return;
             }
             let specialKeyIndex = capturedSpecialKeys.indexOf(key)
             if (specialKeyIndex > -1) {
-                callback(JSON.stringify({
+                callback({
                     event: "SpecialKey",
                     specialKeyCode: specialKeyIndex,
                     modifiers: getModifierFlags(e)
-                }));
+                });
             }
         });
         canv.addEventListener("wheel", function (e) {
@@ -91,22 +91,22 @@
                 let viewOffsetY = Math.floor(scrollY);
                 eventState.deltaBuildX = scrollX - viewOffsetX;
                 eventState.deltaBuildY = scrollY - viewOffsetY;
-                callback(JSON.stringify({
+                callback({
                     event: "UserScroll",
                     offsetX: viewOffsetX,
                     offsetY: viewOffsetY
-                }));
+                });
             }
 
         });
         var dispatchMouseEvent = function (e, clientEventCode) {
             let viewportPos = vtcanvas.rendering.viewportPosFromClientPos(e.clientX, e.clientY);
-            callback(JSON.stringify({
+            callback({
                 event: "MouseEvent",
                 type: clientEventCode,
                 x: viewportPos.x,
                 y: viewportPos.y
-            }));
+            });
         };
         canv.addEventListener("mousemove", e => dispatchMouseEvent(e, 0));
         canv.addEventListener("mousedown", e => dispatchMouseEvent(e, 1));
