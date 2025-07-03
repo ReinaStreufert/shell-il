@@ -13,7 +13,7 @@ namespace shellil.VirtualTerminal
     {
         public static async Task Main(string[] args)
         {
-            var client = new DebugTerminalClient();
+            var client = new DebugTerminalClient("pemdas.nlisp");
             var terminal = new VirtualTerminal(client);
             await terminal.LaunchAsync();
         }

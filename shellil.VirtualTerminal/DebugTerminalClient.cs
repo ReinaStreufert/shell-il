@@ -9,12 +9,21 @@ namespace shellil.VirtualTerminal
 {
     public class DebugTerminalClient : IVirtualTerminalClient
     {
+        public DebugTerminalClient(string filePath)
+        {
+            _InitialBufferText = File.ReadAllLines(filePath);
+        }
+
         private IVirtualTerminalBuffer? _Buffer;
         private IBufferViewport? _View;
+        private string[] _InitialBufferText;
 
         public async Task OnReadyAsync(IVirtualTerminalContext ctx)
         {
             var buffer = await ctx.CreateBufferAsync(200);
+            for (int y = 0; y < _InitialBufferText.Length; y++)
+                await buffer.WriteLineAsync(_InitialBufferText[y]);
+            await buffer.SetCursorPosAsync(0, 0);
             var view = await buffer.CreateViewport(0, 0);
             _Buffer = buffer;
             _View = view;
