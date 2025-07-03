@@ -34,6 +34,7 @@ namespace shellil.VirtualTerminal
             var fgColorInput = await HTMLInputElement.FromDOMNodeAsync(await docBody.QuerySelectAsync("#fginput"));
             bgColorInput.ValueChanged += async () => await buffer.SetBackgroundColorAsync(bgColorInput.Value);
             fgColorInput.ValueChanged += async () => await buffer.SetForegroundColorAsync(fgColorInput.Value);
+            await _View.PresentAsync();
         }
 
         public async Task OnInputCharAsync(char inputChar, TerminalModifierKeys modifiers)
@@ -95,9 +96,15 @@ namespace shellil.VirtualTerminal
             return Task.CompletedTask;
         }
 
-        public Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y)
+        public async Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y)
         {
-            return Task.CompletedTask;
+            if (_Buffer == null || _View == null)
+                return;
+            if (type == TerminalMouseEventType.MouseDown)
+            {
+                await _Buffer.SetCursorPosAsync(x, y);
+                await _View.PresentAsync();
+            }
         }
     }
 }

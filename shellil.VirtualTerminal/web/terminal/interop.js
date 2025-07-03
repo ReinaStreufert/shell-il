@@ -111,7 +111,7 @@
             //console.log("x: " + eventState.deltaBuildX.toString() + " y: " + eventState.deltaBuildY.toString());
         });
         var dispatchMouseEvent = function (e, clientEventCode) {
-            let viewportPos = vtcanvas.rendering.viewportPosFromClientPos(e.clientX, e.clientY);
+            let viewportPos = vtcanvas.rendering.viewportPosFromClientPos(e.offsetX, e.offsetY);
             callback({
                 event: "MouseEvent",
                 type: clientEventCode,
