@@ -16,6 +16,8 @@ namespace shellil.VirtualTerminal
         {
             var buffer = await ctx.CreateBufferAsync(200);
             var view = await buffer.CreateViewport(0, 0);
+            _Buffer = buffer;
+            _View = view;
 
             var appWindow = ctx.GetAppWindow();
             var docBody = await appWindow.GetDocumentBodyAsync();

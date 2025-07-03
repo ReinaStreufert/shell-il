@@ -48,12 +48,12 @@ namespace shellil.VirtualTerminal
             await frontendReady.Task;
             var documentBody = await window.GetDocumentBodyAsync();
             var vtElement = await documentBody.QuerySelectAsync("#vt");
-            await vtElement.AddEventListenerAsync(Event.Resize, () => _ = HandleResizeAsync(window));
-            await vtElement.AddEventListenerAsync(Event.KeyDown, e => _ = HandleKeyDownAsync(e));
-            await vtElement.AddEventListenerAsync(Event.Wheel, e => _ = HandleWheelAsync(e, window));
-            await vtElement.AddEventListenerAsync(Event.MouseMove, e => _ = HandleMouseEventAsync(e, TerminalMouseEventType.MouseMove, window));
-            await vtElement.AddEventListenerAsync(Event.MouseDown, e => _ = HandleMouseEventAsync(e, TerminalMouseEventType.MouseDown, window));
-            await vtElement.AddEventListenerAsync(Event.MouseUp, e => _ = HandleMouseEventAsync(e, TerminalMouseEventType.MouseUp, window));
+            await vtElement.AddEventListenerAsync(Event.Resize, async () => await HandleResizeAsync(window));
+            await vtElement.AddEventListenerAsync(Event.KeyDown, async e => await HandleKeyDownAsync(e));
+            await vtElement.AddEventListenerAsync(Event.Wheel, async e => await HandleWheelAsync(e, window));
+            await vtElement.AddEventListenerAsync(Event.MouseMove, async e => await HandleMouseEventAsync(e, TerminalMouseEventType.MouseMove, window));
+            await vtElement.AddEventListenerAsync(Event.MouseDown, async e => await HandleMouseEventAsync(e, TerminalMouseEventType.MouseDown, window));
+            await vtElement.AddEventListenerAsync(Event.MouseUp, async e => await HandleMouseEventAsync(e, TerminalMouseEventType.MouseUp, window));
             await _Client.OnReadyAsync(new VirtualTerminalContext(window, this));
         }
 
