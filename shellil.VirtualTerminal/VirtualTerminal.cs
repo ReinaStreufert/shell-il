@@ -16,14 +16,6 @@ namespace shellil.VirtualTerminal
     {
         public IWebContent Content => _Content;
         public IVirtualTerminalClient Client => _Client;
-        public (int w, int h) WindowSize
-        {
-            get
-            {
-                lock (_WindowSizeLock)
-                    return _WindowSize;
-            }
-        }
 
         public VirtualTerminal(IVirtualTerminalClient client)
         {
@@ -46,92 +38,11 @@ namespace shellil.VirtualTerminal
             await using (var setInteropInitFunc = (IJSFunction)await window.EvaluateJSExpressionAsync("vtcanvas.setInteropInit"))
                 await setInteropInitFunc.CallAsync(frontendReady.CompletionSignal);
             await frontendReady.Task;
-            var documentBody = await window.GetDocumentBodyAsync();
-            var vtElement = await documentBody.QuerySelectAsync("#vt");
-            await vtElement.AddEventListenerAsync(Event.Resize, async () => await HandleResizeAsync(window));
-            await vtElement.AddEventListenerAsync(Event.KeyDown, async e => await HandleKeyDownAsync(e));
-            await vtElement.AddEventListenerAsync(Event.Wheel, async e => await HandleWheelAsync(e, window));
-            await vtElement.AddEventListenerAsync(Event.MouseMove, async e => await HandleMouseEventAsync(e, TerminalMouseEventType.MouseMove, window));
-            await vtElement.AddEventListenerAsync(Event.MouseDown, async e => await HandleMouseEventAsync(e, TerminalMouseEventType.MouseDown, window));
-            await vtElement.AddEventListenerAsync(Event.MouseUp, async e => await HandleMouseEventAsync(e, TerminalMouseEventType.MouseUp, window));
+
             await _Client.OnReadyAsync(new VirtualTerminalContext(window, this));
         }
 
-        private async Task HandleResizeAsync(IAppWindow window)
-        {
-            var oldSize = _WindowSize;
-            var updatedSize = await getWindowSize(window);
-            if (updatedSize.w != oldSize.w || updatedSize.h != oldSize.h)
-            {
-                lock (_WindowSizeLock)
-                    _WindowSize = updatedSize;
-                await _Client.OnViewportResizeAsync(updatedSize.w, updatedSize.h);
-            }
-        }
-
-        private async Task HandleKeyDownAsync(KeyboardEventArgs e)
-        {
-            var key = e.Key;
-            var modifiers = e.Modifiers;
-            if (key == null)
-                return;
-            if (key.Length == 1)
-                await _Client.OnInputCharAsync(key[0], modifiers);
-            else if (Enum.TryParse<TerminalSpecialKey>(key, out var specialKey))
-                await _Client.OnSpecialKeyAsync(specialKey, modifiers);
-        }
-
-        private async Task HandleWheelAsync(WheelEventArgs e, IAppWindow window)
-        {
-            var deltaX = e.DeltaX;
-            var deltaY = e.DeltaY;
-            double scrollX;
-            double scrollY;
-            if (e.Mode == WheelDeltaMode.Lines)
-            {
-                scrollX = deltaX;
-                scrollY = deltaY;
-            }
-            else if (e.Mode == WheelDeltaMode.Pixels)
-            {
-                await using (var viewportOffsetJs = (IJSObject)await window.EvaluateJSExpressionAsync($"vtcanvas.rendering.viewportPosFromClientPos({deltaX},{deltaY});"))
-                await using (var binding = await viewportOffsetJs.BindAsync())
-                {
-                    scrollX = ((IJSValue<double>)await binding.GetAsync("x")).Value;
-                    scrollY = ((IJSValue<double>)await binding.GetAsync("y")).Value;
-                }
-            }
-            else if (e.Mode == WheelDeltaMode.Pages)
-            {
-                var viewportSize = WindowSize;
-                scrollX = deltaX * viewportSize.w;
-                scrollY = deltaY * viewportSize.h;
-            }
-            else throw new NotImplementedException();
-            _WheelDeltaXBuild += scrollX;
-            _WheelDeltaYBuild += scrollY;
-            if (_WheelDeltaXBuild > 1 || _WheelDeltaYBuild > 1)
-            {
-                var viewOffsetX = (int)Math.Floor(_WheelDeltaXBuild);
-                var viewOffsetY = (int)Math.Floor(_WheelDeltaYBuild);
-                _WheelDeltaXBuild -= viewOffsetX;
-                _WheelDeltaYBuild -= viewOffsetY;
-                await _Client.OnUserScrollAsync(viewOffsetX, viewOffsetY);
-            }
-        }
-
-        private async Task HandleMouseEventAsync(MouseEventArgs e, TerminalMouseEventType type, IAppWindow window)
-        {
-            int posX;
-            int posY;
-            await using (var viewportPosJs = (IJSObject)await window.EvaluateJSExpressionAsync($"vtcanvas.rendering.viewportPosFromClientPos({e.ClientX},{e.ClientY});"))
-            await using (var binding = await viewportPosJs.BindAsync())
-            {
-                posX = (int)Math.Floor(((IJSValue<double>)await binding.GetAsync("x")).Value);
-                posY = (int)Math.Floor(((IJSValue<double>)await binding.GetAsync("y")).Value);
-            }
-            await _Client.OnMouseEventAsync(type, posX, posY);
-        }
+        
 
         private async Task<(int w, int h)> getWindowSize(IAppWindow window)
         {

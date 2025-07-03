@@ -27,7 +27,7 @@ namespace shellil.VirtualTerminal
             fgColorInput.ValueChanged += async () => await buffer.SetForegroundColorAsync(fgColorInput.Value);
         }
 
-        public async Task OnInputCharAsync(char inputChar, ModifierKeys modifiers)
+        public async Task OnInputCharAsync(char inputChar, TerminalModifierKeys modifiers)
         {
             if (_Buffer == null || _View == null)
                 return;
@@ -36,7 +36,7 @@ namespace shellil.VirtualTerminal
             await _View.PresentAsync();
         }
 
-        public async Task OnSpecialKeyAsync(TerminalSpecialKey key, ModifierKeys modifiers)
+        public async Task OnSpecialKeyAsync(TerminalSpecialKey key, TerminalModifierKeys modifiers)
         {
             if (_Buffer == null || _View == null)
                 return;
