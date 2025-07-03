@@ -13,7 +13,6 @@
             rendering.setActiveViewport(view)
         }
         view.scroll = function (x, y) {
-            let viewportSize = rendering.getViewportSize();
             view.viewportX = Math.max(0, Math.min(view.viewportX + x, buf.bufferWidth - 1));
             view.viewportY = Math.max(0, Math.min(view.viewportY + y, buf.getBufferHeight() - 1));
         }

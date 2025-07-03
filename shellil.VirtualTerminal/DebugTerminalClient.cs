@@ -102,7 +102,8 @@ namespace shellil.VirtualTerminal
                 return;
             if (type == TerminalMouseEventType.MouseDown)
             {
-                await _Buffer.SetCursorPosAsync(x, y);
+                var scrollOffset = await _View.GetScrollOffsetAsync();
+                await _Buffer.SetCursorPosAsync(scrollOffset.x + x, scrollOffset.y + y);
                 await _View.PresentAsync();
             }
         }
