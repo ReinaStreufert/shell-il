@@ -1,0 +1,42 @@
+WebSocket remote Virtual Terminal protocol
+
+the api is designed to offer flexible control over the terminal frontend and its behavior to an endpoint "terminal driver"
+based on Uint16Array, all messages as 16-bit aligned
+
+message[0] = message type
+
+Host bound 0x00 On front-end Ready
+message[1] = initial viewport width (in columns)
+message[2] = initial viewport height (in rows)
+
+Host bound 0x01 On viewport resize
+message[1] = new viewport width (in columns)
+message[2] = new viewport height (in rows)
+
+Host bound 0x02 On input char
+message[1] = utf-16 character
+message[2] = modifier flags
+  from lsb to msb
+  bit 0: shift?
+  bit 1: alt?
+  bit 2: meta? (command key on mac, windows key on windows)
+  bit 3: Ctrl?
+  bits 4-15 unused
+
+Host bound 0x03 On special key
+message[1] = special key code
+  backspace = 0x00
+  enter = 0x01
+  tab = 0x02
+  arrowup = 0x03
+  arrowdown = 0x04
+  arrowleft = 0x05
+  arrowright = 0x06
+message[1] = modifier flags
+  same as above message
+
+Host bound 0x04 On user scroll
+message[1] = delta x
+message[2] = delta y
+
+Host bound 0x05 Return 
