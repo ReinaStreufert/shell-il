@@ -9,7 +9,7 @@ namespace shellil.VirtualTerminal
 {
     public interface IVirtualTerminal
     {
-        public IVirtualTerminalClient Client { get; }
+        public IVirtualTerminalDriver Client { get; }
     }
 
     public interface IVirtualTerminalContext

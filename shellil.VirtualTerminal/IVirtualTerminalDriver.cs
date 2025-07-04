@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace shellil.VirtualTerminal
 {
-    public interface IVirtualTerminalClient
+    public interface IVirtualTerminalDriver
     {
         public Task OnReadyAsync(IVirtualTerminalContext ctx);
         public Task OnViewportResizeAsync(int widthCols, int heightRows);

@@ -16,9 +16,9 @@ namespace shellil.VirtualTerminal
     public class VirtualTerminal : IWebApp, IVirtualTerminal
     {
         public IWebContent Content => _Content;
-        public IVirtualTerminalClient Client => _Client;
+        public IVirtualTerminalDriver Client => _Client;
 
-        public VirtualTerminal(IVirtualTerminalClient client)
+        public VirtualTerminal(IVirtualTerminalDriver client)
         {
             _Client = client;
             _Content.AddManifestSources("/", Assembly.GetExecutingAssembly(), "shellil.VirtualTerminal.web");
@@ -26,7 +26,7 @@ namespace shellil.VirtualTerminal
         }
 
         private WebContent _Content = new WebContent();
-        private IVirtualTerminalClient _Client;
+        private IVirtualTerminalDriver _Client;
 
         public async Task OnStartupAsync(IAppContext context)
         {

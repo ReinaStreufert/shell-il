@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace shellil.VirtualTerminal
 {
-    public class DebugTerminalClient : IVirtualTerminalClient
+    public class DebugTerminalDriver : IVirtualTerminalDriver
     {
-        public DebugTerminalClient(string filePath)
+        public DebugTerminalDriver(string filePath)
         {
             _InitialBufferText = File.ReadAllLines(filePath);
         }
