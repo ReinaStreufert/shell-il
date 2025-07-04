@@ -39,4 +39,12 @@ Host bound 0x04 On user scroll
 message[1] = delta x
 message[2] = delta y
 
-Host bound 0x05 Return 
+Host bound 0x05 Buffer created
+message[0] = request id
+message[1] = buffer id
+message[2] = buffer width
+
+Host bound 0x06 Viewport created
+message[0] = request id
+message[1] = viewport id
+
