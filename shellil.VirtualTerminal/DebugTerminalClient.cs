@@ -28,12 +28,12 @@ namespace shellil.VirtualTerminal
             _Buffer = buffer;
             _View = view;
 
-            var appWindow = ctx.GetAppWindow();
+            /*var appWindow = ctx.GetAppWindow();
             var docBody = await appWindow.GetDocumentBodyAsync();
             var bgColorInput = await HTMLInputElement.FromDOMNodeAsync(await docBody.QuerySelectAsync("#bginput"));
             var fgColorInput = await HTMLInputElement.FromDOMNodeAsync(await docBody.QuerySelectAsync("#fginput"));
             bgColorInput.ValueChanged += async () => await buffer.SetBackgroundColorAsync(bgColorInput.Value);
-            fgColorInput.ValueChanged += async () => await buffer.SetForegroundColorAsync(fgColorInput.Value);
+            fgColorInput.ValueChanged += async () => await buffer.SetForegroundColorAsync(fgColorInput.Value);*/
             await _View.PresentAsync();
         }
 
@@ -91,9 +91,11 @@ namespace shellil.VirtualTerminal
             await _View.PresentAsync();
         }
 
-        public Task OnViewportResizeAsync(int widthCols, int heightRows)
+        public async Task OnViewportResizeAsync(int widthCols, int heightRows)
         {
-            return Task.CompletedTask;
+            if (_Buffer == null || _View == null)
+                return;
+            await _View.PresentAsync();
         }
 
         public async Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y)

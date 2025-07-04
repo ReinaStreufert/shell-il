@@ -12,7 +12,9 @@
         lastPresented: null,
         lastCursorDraw: null,
         lastFrameTime: 0,
-        lastPresentTime: 0
+        lastPresentTime: 0,
+        lastFrameWidth: 0,
+        lastFrameHeight: 0
     };
 
     rendering.setActiveViewport = function (buf) {
@@ -130,6 +132,13 @@
                     h: (Math.abs(monospaceMetric.fontBoundingBoxAscent) + Math.abs(monospaceMetric.fontBoundingBoxDescent))
                 };
             }))();
+        }
+        let canvasWidth = canv.width;
+        let canvasHeight = canv.height;
+        if (canvasWidth != snapshot.lastFrameWidth || canvasHeight != snapshot.lastFrameHeight) {
+            snapshot.lastFrameWidth = canvasWidth;
+            snapshot.lastFrameHeight = canvasHeight;
+            snapshot.lastPresented = null;
         }
         let viewportSize = rendering.getViewportSize();
         let activeSnapshot = snapshot.active;

@@ -27,9 +27,9 @@
     };
     vtcanvas.setInteropDispatcher = function (callback) {
         let canv = vtcanvas.element;
-        canv.addEventListener("resize", function (e) {
+        window.addEventListener("resize", function (e) {
             let viewportSize = vtcanvas.rendering.getViewportSize();
-            if (viewportSize.w != eventState.lastViewportSize.w || viewportSize.h != eventState.lastViewportSize.h) {
+            if (eventState.lastViewportSize == null || viewportSize.w != eventState.lastViewportSize.w || viewportSize.h != eventState.lastViewportSize.h) {
                 eventState.lastViewportSize = viewportSize;
                 callback({
                     event: "ViewportResize",
