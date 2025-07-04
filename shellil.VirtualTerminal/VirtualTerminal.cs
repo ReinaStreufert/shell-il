@@ -27,9 +27,6 @@ namespace shellil.VirtualTerminal
 
         private WebContent _Content = new WebContent();
         private IVirtualTerminalClient _Client;
-        private object _WindowSizeLock = new object();
-        private double _WheelDeltaXBuild = 0d;
-        private double _WheelDeltaYBuild = 0d;
 
         public async Task OnStartupAsync(IAppContext context)
         {
