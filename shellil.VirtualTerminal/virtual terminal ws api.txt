@@ -39,6 +39,8 @@ Host bound 0x04 On user scroll
 message[1] = delta x
 message[2] = delta y
 
+
+
 Host bound 0x05 Buffer created
 message[1]  = request id
 message[2]  = buffer id
@@ -93,7 +95,7 @@ message[4] = cursor state
   blink = 0x01
   invisible = 0x02
 
-Host bound 0x09 Buffer commands processed
+Host bound 0x09 Buffer or viewport request processed
 message[1] = request id
 
 Client bound 0x00 Create buffer
@@ -106,6 +108,17 @@ message[2] = buffer id
 message[3] = initial x offset
 message[4] = initial y offset
 
+Client bound 0x02 Process viewport command
+message[1] = request id
+message[2] = viewport id
+message[3] = action flags
+  from lsb to msb
+  bit 0: apply scroll offset?
+  bit 1: scroll cursor into view?
+  bit 2: present?
+if apply scroll offset?
+  message[4] = scroll x offset
+  message[5] = scroll y offset
 
 
 Client bound 0x02 Process buffer commands

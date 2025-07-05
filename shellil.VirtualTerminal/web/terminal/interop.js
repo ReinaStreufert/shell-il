@@ -93,7 +93,7 @@
                 eventState.deltaBuildY = scrollY - viewOffsetY;
                 callback({
                     event: "UserScroll",
-                    offsetX: viewOffsetX, // viewport offset is opposite of wheel direction
+                    offsetX: viewOffsetX,
                     offsetY: viewOffsetY
                 });
             } else if (scrollX < -1 || scrollY < -1) {
@@ -108,7 +108,6 @@
                 });
             }
             return false;
-            //console.log("x: " + eventState.deltaBuildX.toString() + " y: " + eventState.deltaBuildY.toString());
         });
         var dispatchMouseEvent = function (e, clientEventCode) {
             let viewportPos = vtcanvas.rendering.viewportPosFromClientPos(e.offsetX, e.offsetY);
