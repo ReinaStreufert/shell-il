@@ -117,7 +117,10 @@
                 };
                 advance();
             }
-        }
+        };
+        buf.writeCommands = function (commandBuf) {
+            
+        };
         buf.createViewport = function (xOffset, yOffset) {
             let view = newViewport(buf);
             view.viewportX = xOffset;

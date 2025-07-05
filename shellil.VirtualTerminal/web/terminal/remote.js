@@ -179,7 +179,7 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         }
         let onMessage = function (e) {
             let msgBuf = e.data;
-
+            
         };
         ws.addEventListener("open", function (e) {
             vtcanvas.setInteropInit(function () {
