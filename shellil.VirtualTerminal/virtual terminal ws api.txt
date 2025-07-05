@@ -106,6 +106,8 @@ message[2] = buffer id
 message[3] = initial x offset
 message[4] = initial y offset
 
+
+
 Client bound 0x02 Process buffer commands
 Writing large amounts of formatted text to the buffer would be the biggest bottleneck mostly just because of the overhead in processing each command separately as another web-socket message and because of extra bandwidth usage from attribute-changed messages sent while a large set of already queued instructions are simultaneously sent from the host. after all commands in the request are processed, attribute-changed messages are generated and then finally host bound 0x09 commands processed is sent
 message[1] = buffer id
