@@ -7,28 +7,27 @@ using System.Threading.Tasks;
 
 namespace shellil.VirtualTerminal
 {
-    public interface IVirtualTerminal
+    public interface IVirtualTerminalHost
     {
-        public IVirtualTerminalDriver Client { get; }
+        public ITerminalDriverFactory DriverFactory { get; }
+        public Task ListenAsync(IEnumerable<string> httpPrefixes, CancellationToken cancelToken);
     }
 
     public interface IVirtualTerminalContext
     {
         public Task<IVirtualTerminalBuffer> CreateBufferAsync(int cols);
-#if DEBUG
-        public IAppWindow GetAppWindow();
-#endif
     }
 
     public interface IVirtualTerminalBuffer : IAsyncDisposable
     {
-        public IVirtualTerminal Terminal { get; }
         public int Width { get; }
         public Task<int> GetHeightAsync();
         public Task<(int x, int y)> GetCursorPosAsync();
         public Task SetCursorPosAsync(int x, int y);
-        public Task SetForegroundColorAsync(string color);
-        public Task SetBackgroundColorAsync(string color);
+        public Task SetForegroundColorAsync(byte r, byte g, byte b, byte a);
+        public Task SetBackgroundColorAsync(byte r, byte g, byte b, byte a);
+        public Task<(byte r, byte g, byte b, byte a)> GetForegroundColorAsync();
+        public Task<(byte r, byte g, byte b, byte a)> GetBackgroundColorAsync();
         public Task<IBufferViewport> CreateViewport(int offsetX, int offsetY);
         public Task WriteAsync(string text);
         public Task LineFeedAsync(int count);

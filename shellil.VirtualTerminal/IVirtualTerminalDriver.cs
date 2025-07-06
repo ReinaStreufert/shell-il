@@ -16,6 +16,11 @@ namespace shellil.VirtualTerminal
         public Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y);
     }
 
+    public interface ITerminalDriverFactory
+    {
+        public Task<IVirtualTerminalDriver> CreateDriverAsync();
+    }
+
     public enum TerminalSpecialKey
     {
         Backspace = 0,

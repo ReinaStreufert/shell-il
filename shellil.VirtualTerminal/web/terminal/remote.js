@@ -32,7 +32,8 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         FLAG_LINEFEED: 8,
         FLAG_SCROLLOFFSET: 1,
         FLAG_SCROLLCURSORINTOVIEW: 2,
-        FLAG_PRESENT: 4
+        FLAG_SETCURSORSTATE: 4,
+        FLAG_PRESENT: 8
     };
 
     let remote = {};
@@ -292,13 +293,16 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 let actionFlags = msgBuf[3];
                 let view = remoteObjectState.remoteViewports[viewObjId];
                 let viewState = saveViewportState(view);
+                let i = 4;
                 if (actionFlags & FLAG_SCROLLOFFSET > 0) {
-                    let offsetX = msgBuf[4];
-                    let offsetY = msgBuf[5];
+                    let offsetX = msgBuf[i++];
+                    let offsetY = msgBuf[i++];
                     view.scroll(offsetX, offsetY);
                 }
                 if (actionFlags & FLAG_SCROLLCURSORINTOVIEW)
                     view.scrollCursorIntoView();
+                if (actionFlags & FLAG_SETCURSORSTATE)
+                    decodeCursorState(msgBuf[i++]);
                 notifyViewportChanges(viewObjId, viewState, view);
                 let responseBuf = new Uint16Array(2);
                 responseBuf[0] = net.HB_REQUESTPROCESSED;
@@ -320,6 +324,5 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 ws.send(msgBuf);
             });
         });
-        
     };
 })();
