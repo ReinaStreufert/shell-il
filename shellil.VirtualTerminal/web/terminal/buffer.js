@@ -118,8 +118,61 @@
                 advance();
             }
         };
-        buf.writeCommands = function (commandBuf) {
-            
+        let readControlToken = function (commandBuf, bufIndex, commandIndex, runLengthState) {
+            let contiguousUnspecifiedCount = commandBuf[bufIndex++];
+            let contiguousSpecifiedCount = commandBuf[bufIndex++];
+            runLengthState.nextControlToken = commandIndex + contiguousSpecifiedCount + 1;
+            runLengthState.runLengthThreshold = commandIndex + contiguousUnspecifiedCount;
+            return bufIndex;
+        };
+        buf.writeCommands = function (commandBuf, commandCount) {
+            let runLengthState = {
+                position: {
+                    nextControlToken: 0,
+                    runLengthThreshold: 0
+                },
+                bgcolor: {
+                    nextControlToken: 0,
+                    runLengthThreshold: 0
+                },
+                fgcolor: {
+                    nextControlToken: 0,
+                    runLengthThreshold: 0
+                },
+                textchar: {
+                    nextControlToken: 0,
+                    runLengthThreshold: 0
+                },
+                nextCharacter: ' '
+            };
+            let bufIndex = 0;
+            for (let commandIndex = 0; commandIndex < commandCount; commandIndex++) {
+                if (commandIndex == runLengthState.position.nextControlToken)
+                    bufIndex = readControlToken(commandBuf, bufIndex, commandIndex, runLengthState.position);
+                if (commandIndex >= runLengthState.position.runLengthThreshold) {
+                    buf.cursorX = commandBuf[bufIndex++];
+                    buf.cursorY = commandBuf[bufIndex++];
+                }
+                if (commandIndex == runLengthState.bgcolor.nextControlToken)
+                    bufIndex = readControlToken(commandBuf, bufIndex, commandIndex, runLengthState.bgcolor);
+                if (commandIndex >= runLengthState.bgcolor.runLengthThreshold) {
+                    let rg = commandBuf[bufIndex++];
+                    let ba = commandBuf[bufIndex++];
+                    buf.bg = vtcanvas.remote.decodeColor(rg, ba);
+                }
+                if (commandIndex == runLengthState.fgcolor.nextControlToken)
+                    bufIndex = readControlToken(commandBuf, bufIndex, commandIndex, runLengthState.fgcolor);
+                if (commandIndex >= runLengthState.fgcolor.runLengthThreshold) {
+                    let rg = commandBuf[bufIndex++];
+                    let ba = commandBuf[bufIndex++];
+                    buf.fg = vtcanvas.remote.decodeColor(rg, ba);
+                }
+                if (commandIndex == runLengthState.textchar.nextControlToken)
+                    bufIndex = readControlToken(commandBuf, bufIndex, commandIndex, runLengthState.textchar);
+                if (commandIndex >= runLengthState.textchar.runLengthThreshold)
+                    runLengthState.nextCharacter = String.fromCharCode(commandBuf[bufIndex++]);
+                buf.write(runLengthState.nextCharacter);
+            }
         };
         buf.createViewport = function (xOffset, yOffset) {
             let view = newViewport(buf);

@@ -27,7 +27,34 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         CURSOR_INVISIBLE: 0x02
     };
 
-    let attachToRemoteClient = function (hosturl) {
+    let remote = {};
+    vtcanvas.remote = remote;
+
+    remote.encodeColor = function (hexCode) {
+        if (hexCode[0] != "#")
+            throw {};
+        let r = Number.parseInt(hexCode.substr(1, 2), 16);
+        let g = Number.parseInt(hexCode.substr(3, 2), 16);
+        let b = Number.parseInt(hexCode.substr(5, 2), 16);
+        let a;
+        if (hexCode.length == 9)
+            a = Number.parseInt(hexCode.substr(7, 2), 16);
+        else
+            a = 255;
+        return {
+            rg: r << 8 | g,
+            ba: b << 8 | a
+        };
+    };
+    remote.decodeColor = function (rg, ba) {
+        let r = rg >> 8;
+        let g = rg & 255;
+        let b = ba >> 8;
+        let a = ba & 255;
+        return "#" + r.toString(16) + g.toString(16) + b.toString(16) + a.toString(16);
+    };
+
+    remote.attachToRemoteClient = function (hosturl) {
         let remoteObjectState = {
             remoteBuffers: {},
             remoteViewports: {}
@@ -67,29 +94,7 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 ws.send(buf);
             }
         };
-        let encodeColor = function (hexCode) {
-            if (hexCode[0] != "#")
-                throw {};
-            let r = Number.parseInt(hexCode.substr(1, 2), 16);
-            let g = Number.parseInt(hexCode.substr(3, 2), 16);
-            let b = Number.parseInt(hexCode.substr(5, 2), 16);
-            let a;
-            if (hexCode.length == 9)
-                a = Number.parseInt(hexCode.substr(7, 2), 16);
-            else
-                a = 255;
-            return {
-                rg: r << 8 | g,
-                ba: b << 8 | a
-            };
-        };
-        let decodeColor = function (rg, ba) {
-            let r = rg >> 8;
-            let g = rg & 255;
-            let b = ba >> 8;
-            let a = ba & 255;
-            return "#" + r.toString(16) + g.toString(16) + b.toString(16) + a.toString(16);
-        };
+        
         let encodeCursorState = function (stateName) {
             if (stateName == "solid")
                 return net.CURSOR_SOLID;
@@ -154,9 +159,9 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 msgBuf[n++] = buf.cursorY;
             }
             if (bgColorUpdated)
-                msgBuf[n++] = encodeColor(buf.bg);
+                msgBuf[n++] = remote.encodeColor(buf.bg);
             if (fgColorUpdated)
-                msgBuf[n++] = encodeColor(buf.fg);
+                msgBuf[n++] = remote.encodeColor(buf.fg);
             ws.send(msgBuf);
         };
         let saveViewportState = function (view) {
