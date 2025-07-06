@@ -39,9 +39,15 @@ Host bound 0x04 On user scroll
 message[1] = delta x
 message[2] = delta y
 
+Host bound 0x05 On mouse event
+message[1] = event type code
+  mouse move = 0x00
+  mouse down = 0x01
+  mouse up = 0x02
+message[2] = pointer x
+message[3] = pointer y
 
-
-Host bound 0x05 Buffer created
+Host bound 0x06 Buffer created
 message[1]  = request id
 message[2]  = buffer id
 message[3]  = buffer width
@@ -53,7 +59,7 @@ message[8]  = backgroundb << 8 | backgrounda
 message[9]  = foregroundr << 8 | foregroundg
 message[10] = foregroundb << 8 | foregrounda
 
-Host bound 0x06 Viewport created
+Host bound 0x07 Viewport created
 message[1] = request id
 message[2] = viewport id
 message[3] = x offset
@@ -62,9 +68,8 @@ message[5] = cursor state
   solid = 0x00
   blink = 0x01
   invisible = 0x02
-message[5] = source buffer id
 
-Host bound 0x07 Buffer attributes changed
+Host bound 0x08 Buffer attributes changed
 message[1] = buffer id
 message[2] = updated attribute bitmask
   from lsb to msb
@@ -86,7 +91,7 @@ if foreground color?
   message[n++]  = foregroundr << 8 | foregroundg
   message[n++]  = foregroundb << 8 | foregrounda
 
-Host bound 0x08 Viewport attributes changed
+Host bound 0x09 Viewport attributes changed
 message[1] = viewport id
 message[2] = x offset
 message[3] = y offset
@@ -95,7 +100,7 @@ message[4] = cursor state
   blink = 0x01
   invisible = 0x02
 
-Host bound 0x09 Buffer or viewport request processed
+Host bound 0x0A Action request processed
 message[1] = request id
 
 Client bound 0x00 Create buffer
@@ -108,23 +113,12 @@ message[2] = buffer id
 message[3] = initial x offset
 message[4] = initial y offset
 
-Client bound 0x02 Process viewport command
+
+Client bound 0x02 Write buffer commands
+Writing large amounts of formatted text to the buffer would be the biggest bottleneck mostly just because of the overhead in processing each command separately as another web-socket message and because of extra bandwidth usage from attribute-changed messages sent while a large set of already queued instructions are simultaneously sent from the host. after all commands in the request are processed, attribute-changed messages are generated and then finally host bound 0x0A request processed is sent
 message[1] = request id
-message[2] = viewport id
-message[3] = action flags
-  from lsb to msb
-  bit 0: apply scroll offset?
-  bit 1: scroll cursor into view?
-  bit 2: present?
-if apply scroll offset?
-  message[4] = scroll x offset
-  message[5] = scroll y offset
-
-
-Client bound 0x02 Process buffer commands
-Writing large amounts of formatted text to the buffer would be the biggest bottleneck mostly just because of the overhead in processing each command separately as another web-socket message and because of extra bandwidth usage from attribute-changed messages sent while a large set of already queued instructions are simultaneously sent from the host. after all commands in the request are processed, attribute-changed messages are generated and then finally host bound 0x09 commands processed is sent
-message[1] = buffer id
-message[2] = request id
+message[2] = buffer id
+message[3] = command count
   the rest of the message is a run-length encoded virtual terminal buffer command format detailed below
   there are four attributes of the run-length encoded text:
   1. position
@@ -136,9 +130,9 @@ message[2] = request id
   a run-length control token is two 16-bit integers
   token[0] = number of commands which do not specify the controlled attribute and instead use the value of the last command
   token[1] = number of additional commands where the controlled attribute is specified
-  the sum of token[0] + token[1] represents when the offset from the current run-length control token to the next of the same attribute
+  the sum of token[0] + token[1] + 1 represents the offset from the current run-length control token to the next of the same attribute
 
-  the order of conditionally supplied run-length tokens and attributes is listed below. on the first process command, all run-length tokens and attribute values must be included
+  the order of conditionally supplied run-length tokens and attributes is listed below. on the first process command, all run-length tokens and attribute values must be included. 
   command[n+=2] = position run-length control token; if indicated by the run-length state
   command[n++]  = cursor position x; if indicated by the run-length state
   command[n++]  = cursor position y; if indicated by the run-length state
@@ -150,3 +144,37 @@ message[2] = request id
   command[n++]  = foregroundb << 8 | foregrounda; if indicated by the run-length state
   command[n+=2] = text run-length control token; if indicated by the run-length state
   command[n++]  = utf-16 text character; if indicated by the run-length state
+
+Client bound 0x03 Set buffer attributes
+Set buffer attributes without writing any text. Client responds with 0x0A request processed
+message[1] = request id
+message[2] = buffer id
+message[3] = action flags
+  from lsb to msb
+  bit 0: set cursor position?
+  bit 1: set background color?
+  bit 2: set foreground color?
+  bit 3: apply line feed?
+if set cursor position?
+  command[n++]  = cursor position x;
+  command[n++]  = cursor position y;
+if set background color?
+  command[n++]  = backgroundr << 8 | backgroundg
+  command[n++]  = backgroundb << 8 | backgrounda
+if set foreground color?
+  command[n++]  = foregroundr << 8 | foregroundg
+  command[n++]  = foregroundb << 8 | foregrounda
+if apply line feed?
+  command[n++]  = (signed)line feed offset
+
+Client bound 0x04 Viewport command
+message[1] = request id
+message[2] = viewport id
+message[3] = action flags
+  from lsb to msb
+  bit 0: apply scroll offset?
+  bit 1: scroll cursor into view?
+  bit 2: present?
+if apply scroll offset?
+  message[4] = scroll x offset
+  message[5] = scroll y offset

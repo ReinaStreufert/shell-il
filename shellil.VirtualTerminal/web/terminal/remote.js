@@ -16,15 +16,23 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         HB_REQUESTPROCESSED: 0x0A,
         CB_CREATEBUFFER: 0x00,
         CB_CREATEVIEWPORT: 0x01,
-        CB_PROCBUFFER: 0x02,
-        CB_PROCVIEWPORT: 0x03,
+        CB_WRITEBUFFER: 0x02,
+        CB_SETBUFFERATTR: 0x03,
+        CB_VIEWPORTCOMMAND: 0x04,
         FLAG_SIZEUPDATED: 1,
         FLAG_CURSORPOSUPDATED: 2,
         FLAG_BGCOLORUPDATED: 4,
         FLAG_FGCOLORUPDATED: 8,
         CURSOR_SOLID: 0x00,
         CURSOR_BLINK: 0x01,
-        CURSOR_INVISIBLE: 0x02
+        CURSOR_INVISIBLE: 0x02,
+        FLAG_SETCURSORPOS: 1,
+        FLAG_SETBGCOLOR: 2,
+        FLAG_SETFGCOLOR: 4,
+        FLAG_LINEFEED: 8,
+        FLAG_SCROLLOFFSET: 1,
+        FLAG_SCROLLCURSORINTOVIEW: 2,
+        FLAG_PRESENT: 4
     };
 
     let remote = {};
@@ -57,7 +65,8 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
     remote.attachToRemoteClient = function (hosturl) {
         let remoteObjectState = {
             remoteBuffers: {},
-            remoteViewports: {}
+            remoteViewports: {},
+            idCounter: 0
         };
         let ws = new WebSocket(hosturl);
         let interopDispatcherCallback = function (interopEvent) {
@@ -158,10 +167,16 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 msgBuf[n++] = buf.cursorX;
                 msgBuf[n++] = buf.cursorY;
             }
-            if (bgColorUpdated)
-                msgBuf[n++] = remote.encodeColor(buf.bg);
-            if (fgColorUpdated)
-                msgBuf[n++] = remote.encodeColor(buf.fg);
+            if (bgColorUpdated) {
+                let encodedColor = remote.encodeColor(buf.bg);
+                msgBuf[n++] = encodedColor.rg;
+                msgBuf[n++] = encodedColor.ba;
+            }
+            if (fgColorUpdated) {
+                let encodedColor = remote.encodeColor(buf.fg);
+                msgBuf[n++] = encodedColor.rg;
+                msgBuf[n++] = encodedColor.ba;
+            }
             ws.send(msgBuf);
         };
         let saveViewportState = function (view) {
@@ -184,7 +199,114 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         }
         let onMessage = function (e) {
             let msgBuf = e.data;
-            
+            let msgType = msgBuf[0];
+            if (msgType == net.CB_CREATEBUFFER) {
+                let requestId = msgBuf[1];
+                let bufferWidth = msgBuf[2];
+                let buf = window.createTerminalBuffer(bufferWidth);
+                let resultId = remoteObjectState.idCounter++;
+                remoteObjectState.remoteBuffers[resultId] = buf;
+                let responseBuf = new Uint16Array(11);
+                responseBuf[0] = net.HB_BUFFERCREATED;
+                responseBuf[1] = requestId;
+                responseBuf[2] = resultId;
+                responseBuf[3] = bufferWidth;
+                responseBuf[4] = buf.getBufferHeight();
+                responseBuf[5] = buf.cursorX;
+                responseBuf[6] = buf.cursorY;
+                let encodedBg = remote.encodeColor(buf.bg);
+                let encodedFg = remote.encodeColor(buf.fg);
+                responseBuf[7] = encodedBg.rg;
+                responseBuf[8] = encodedBg.ba;
+                responseBuf[9] = encodedFg.rg;
+                responseBuf[10] = encodedFg.ba;
+                ws.send(responseBuf);
+            } else if (msgType == net.CB_CREATEVIEWPORT) {
+                let requestId = msgBuf[1];
+                let bufObjId = msgBuf[2];
+                let buf = remoteObjectState.remoteBuffers[bufObjId];
+                let xOffset = msgBuf[3];
+                let yOffset = msgBuf[4];
+                let view = buf.createViewport(xOffset, yOffset);
+                let resultId = remoteObjectState.idCounter++;
+                remoteObjectState.remoteViewports[resultId] = view;
+                let responseBuf = new Uint16Array(6);
+                responseBuf[0] = net.HB_VIEWPORTCREATED;
+                responseBuf[1] = requestId;
+                responseBuf[2] = resultId;
+                responseBuf[3] = view.viewportX;
+                responseBuf[4] = view.viewportY;
+                responseBuf[5] = encodeCursorState(view.cursorState);
+                ws.send(responseBuf);
+            } else if (msgType == net.CB_WRITEBUFFER) {
+                let requestId = msgBuf[1];
+                let bufObjId = msgBuf[2];
+                let buf = remoteObjectState.remoteBuffers[bufObjId];
+                let bufState = saveBufferState(buf);
+                let commandCount = msgBuf[3];
+                buf.writeCommands(msgBuf.subarray(3), commandCount);
+                notifyBufferChanges(bufObjId, bufState, buf);
+                let responseBuf = new Uint16Array(2);
+                responseBuf[0] = net.HB_REQUESTPROCESSED;
+                responseBuf[1] = requestId;
+                ws.send(responseBuf);
+            } else if (msgType == net.CB_SETBUFFERATTR) {
+                let requestId = msgBuf[1];
+                let bufObjId = msgBuf[2];
+                let actionFlags = msgBuf[3];
+                let buf = remoteObjectState.remoteBuffers[bufObjId];
+                let bufState = saveBufferState(buf);
+                let i = 4;
+                if (actionFlags & net.FLAG_SETCURSORPOS > 0) {
+                    buf.cursorX = msgBuf[i++];
+                    buf.cursorY = msgBuf[i++];
+                }
+                if (actionFlags & net.FLAG_SETBGCOLOR > 0) {
+                    let rg = msgBuf[i++];
+                    let ba = msgBuf[i++];
+                    buf.bg = remote.decodeColor(rg, ba);
+                }
+                if (actionFlags & net.FLAG_SETFGCOLOR > 0) {
+                    let rg = msgBuf[i++];
+                    let ba = msgBuf[i++];
+                    buf.fg = remote.decodeColor(rg, ba);
+                }
+                if (actionFlags & net.FLAG_LINEFEED > 0) {
+                    let lineOffsetUnsigned = msgBuf[i++];
+                    let lineOffset;
+                    // check for sign bit
+                    if (lineOffsetUnsigned & (1 << 15) > 0)
+                        lineOffset = 0 - (lineOffsetUnsigned & (65535 >> 1));
+                    else
+                        lineOffset = lineOffsetUnsigned;
+                    buf.lineFeed(lineOffset);
+                }
+                notifyBufferChanges(bufObjId, bufState, buf);
+                let responseBuf = new Uint16Array(2);
+                responseBuf[0] = net.HB_REQUESTPROCESSED;
+                responseBuf[1] = requestId;
+                ws.send(responseBuf);
+            } else if (msgType == net.CB_VIEWPORTCOMMAND) {
+                let requestId = msgBuf[1];
+                let viewObjId = msgBuf[2];
+                let actionFlags = msgBuf[3];
+                let view = remoteObjectState.remoteViewports[viewObjId];
+                let viewState = saveViewportState(view);
+                if (actionFlags & FLAG_SCROLLOFFSET > 0) {
+                    let offsetX = msgBuf[4];
+                    let offsetY = msgBuf[5];
+                    view.scroll(offsetX, offsetY);
+                }
+                if (actionFlags & FLAG_SCROLLCURSORINTOVIEW)
+                    view.scrollCursorIntoView();
+                notifyViewportChanges(viewObjId, viewState, view);
+                let responseBuf = new Uint16Array(2);
+                responseBuf[0] = net.HB_REQUESTPROCESSED;
+                responseBuf[1] = requestId;
+                ws.send(responseBuf);
+                if (actionFlags & FLAG_PRESENT)
+                    view.present();
+            }
         };
         ws.addEventListener("open", function (e) {
             vtcanvas.setInteropInit(function () {
