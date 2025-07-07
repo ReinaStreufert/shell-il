@@ -23,6 +23,7 @@ namespace shellil.VirtualTerminal
         private Task? _ListenerTask;
         private byte[] _ReceiveBuffer = new byte[1024];
         private CancellationTokenSource _CTokenSource = new CancellationTokenSource();
+        private ushort _IdCounter = 0;
 
         public void AddMessageHandler(IVTMessageHandler handler)
         {
@@ -78,7 +79,7 @@ namespace shellil.VirtualTerminal
                     lock (_HandlersSync)
                         handlers = _Handlers.ToArray();
                     foreach (var handler in handlers.Where(h => h.MessageId == messageType))
-                        _ = handler.HandleAsync(messageBuf.AsSpan(1));
+                        _ = handler.HandleAsync(new ArraySegment<ushort>(messageBuf, 1, messageBuf.Length - 1));
                 }
             }
         }
@@ -86,6 +87,18 @@ namespace shellil.VirtualTerminal
         public void Dispose()
         {
             _CTokenSource?.Cancel();
+        }
+
+        public ushort NewRequestId()
+        {
+            ushort currentValue;
+            ushort newValue;
+            do
+            {
+                currentValue = _IdCounter;
+                newValue = (ushort)(currentValue < ushort.MaxValue ? currentValue + 1 : 0);
+            } while (Interlocked.CompareExchange(ref _IdCounter, newValue, currentValue) != currentValue);
+            return currentValue;
         }
     }
 }

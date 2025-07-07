@@ -15,6 +15,8 @@ namespace shellil.VirtualTerminal
 
     public interface IVirtualTerminalContext
     {
+        public int InitialViewportWidth { get; }
+        public int InitialViewportHeight { get; }
         public Task<IVirtualTerminalBuffer> CreateBufferAsync(int cols);
     }
 
@@ -24,11 +26,11 @@ namespace shellil.VirtualTerminal
         public Task<int> GetHeightAsync();
         public Task<(int x, int y)> GetCursorPosAsync();
         public Task SetCursorPosAsync(int x, int y);
-        public Task SetForegroundColorAsync(byte r, byte g, byte b, byte a);
-        public Task SetBackgroundColorAsync(byte r, byte g, byte b, byte a);
-        public Task<(byte r, byte g, byte b, byte a)> GetForegroundColorAsync();
-        public Task<(byte r, byte g, byte b, byte a)> GetBackgroundColorAsync();
-        public Task<IBufferViewport> CreateViewport(int offsetX, int offsetY);
+        public Task SetForegroundColorAsync(TerminalColor color);
+        public Task SetBackgroundColorAsync(TerminalColor color);
+        public Task<TerminalColor> GetForegroundColorAsync();
+        public Task<TerminalColor> GetBackgroundColorAsync();
+        public Task<IBufferViewport> CreateViewportAsync(int offsetX, int offsetY);
         public Task WriteAsync(string text);
         public Task LineFeedAsync(int count);
     }

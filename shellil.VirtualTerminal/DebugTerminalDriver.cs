@@ -25,7 +25,7 @@ namespace shellil.VirtualTerminal
             for (int y = 0; y < _InitialBufferText.Length; y++)
                 await buffer.WriteLineAsync(_InitialBufferText[y]);
             await buffer.SetCursorPosAsync(0, 0);
-            var view = await buffer.CreateViewport(0, 0);
+            var view = await buffer.CreateViewportAsync(0, 0);
             _Buffer = buffer;
             _View = view;
 

@@ -12,11 +12,12 @@ namespace shellil.VirtualTerminal
         public void AddMessageHandler(IVTMessageHandler handler);
         public void RemoveMessageHandler(IVTMessageHandler handler);
         public Task SendMessageAsync(ushort[] message);
+        public ushort NewRequestId();
     }
 
     public interface IVTMessageHandler
     {
         public ushort MessageId { get; }
-        public Task HandleAsync(ReadOnlySpan<ushort> messageBody);
+        public Task HandleAsync(ArraySegment<ushort> messageBody);
     }
 }
