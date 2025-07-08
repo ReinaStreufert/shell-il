@@ -154,6 +154,21 @@ namespace shellil.VirtualTerminal
             return Task.CompletedTask;
         }
 
+        Task<TerminalPosition> IVirtualTerminalBuffer.GetCursorPosAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task SetCursorPosAsync(TerminalPosition position)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<IBufferViewport> CreateViewportAsync(TerminalPosition scrollOffset)
+        {
+            throw new NotImplementedException();
+        }
+
         private interface IBufferCommand
         {
             public Task SendRequestAsync(IVTSocket socket);
@@ -167,6 +182,19 @@ namespace shellil.VirtualTerminal
             MergedDisposeNew
         }
 
-        
+        private class BufferWriteCommand : IBufferCommand
+        {
+
+
+            public Task SendRequestAsync(IVTSocket socket)
+            {
+                throw new NotImplementedException();
+            }
+
+            public CoalesceResult TryCoalesce(IBufferCommand existingCommand)
+            {
+                throw new NotImplementedException();
+            }
+        }
     }
 }

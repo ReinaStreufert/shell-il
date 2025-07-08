@@ -28,6 +28,18 @@ namespace shellil.VirtualTerminal
             B = (byte)(ba >> 8);
             A = (byte)(ba & 255);
         }
+
+        public void Encode(ushort[] buf, int offset)
+        {
+            buf[offset] = (ushort)((R << 8) | G);
+            buf[offset + 1] = (ushort)((B << 8) | A);
+        }
+
+        public void Encode(BinaryWriter bw)
+        {
+            bw.Write((ushort)((R << 8) | G));
+            bw.Write((ushort)((B << 8) | A));
+        }
     }
 
     public class TerminalPosition

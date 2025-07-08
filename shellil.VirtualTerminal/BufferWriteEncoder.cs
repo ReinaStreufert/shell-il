@@ -68,6 +68,9 @@ namespace shellil.VirtualTerminal
             else
                 _Text.WriteRepitition();
             _CommandCount++;
+            _BGInvalidated = false;
+            _FGInvalidated = false;
+            _PosInvalidated = false;
         }
 
         public void Encode(Stream outputStream)
@@ -75,11 +78,73 @@ namespace shellil.VirtualTerminal
             using (BinaryWriter bw = new BinaryWriter(outputStream))
             {
                 bw.Write((ushort)_CommandCount);
+                var textSegment = _Text[0];
+                var bgcSegment = _BackgroundColor[0];
+                var fgcSegment = _ForegroundColor[0];
+                var posSegment = _Position[0];
+                for (int i = 0; i <  _CommandCount; i++)
+                {
+                    EnsureSegmentAlignment(_Position, ref posSegment, i);
+                    EnsureSegmentAlignment(_BackgroundColor, ref bgcSegment, i);
+                    EnsureSegmentAlignment(_ForegroundColor, ref fgcSegment, i);
+                    EnsureSegmentAlignment(_Text, ref textSegment, i);
+                    var offsetInPosSeg = i - posSegment.CommandIndexOffset;
+                    var offsetInBgcSeg = i - bgcSegment.CommandIndexOffset;
+                    var offsetInFgcSeg = i - fgcSegment.CommandIndexOffset;
+                    var offsetInTextSeg = i - textSegment.CommandIndexOffset;
+
+                    if (offsetInPosSeg == 0)
+                        posSegment.WriteHead(bw);
+                    if (offsetInPosSeg >= posSegment.UnbrokenCount)
+                    {
+                        var seekPosition = posSegment.ContiguousBreaking[offsetInPosSeg - posSegment.UnbrokenCount];
+                        bw.Write(seekPosition.X);
+                        bw.Write(seekPosition.Y);
+                    }
+                    if (offsetInBgcSeg == 0)
+                        bgcSegment.WriteHead(bw);
+                    if (offsetInBgcSeg >= bgcSegment.UnbrokenCount)
+                    {
+                        var uniqueBackgroundColor = bgcSegment.ContiguousBreaking[offsetInBgcSeg - bgcSegment.UnbrokenCount];
+                        uniqueBackgroundColor.Encode(bw);
+                    }
+                    if (offsetInFgcSeg == 0)
+                        fgcSegment.WriteHead(bw);
+                    if (offsetInFgcSeg >= fgcSegment.UnbrokenCount)
+                    {
+                        var uniqueForegroundColor = fgcSegment.ContiguousBreaking[offsetInFgcSeg - fgcSegment.UnbrokenCount];
+                        uniqueForegroundColor.Encode(bw);
+                    }
+                    if (offsetInTextSeg == 0)
+                        textSegment.WriteHead(bw);
+                    if (offsetInTextSeg >= textSegment.UnbrokenCount)
+                        bw.Write((ushort)textSegment.ContiguousBreaking[offsetInTextSeg - textSegment.UnbrokenCount]);
+                }
             }
+        }
+
+        private void EnsureSegmentAlignment<T>(RLEPartitioner<T> partitioner, ref RLESegment<T> currentSegment, int commandOffset) where T : notnull
+        {
+            var offsetInSegment = commandOffset - currentSegment.CommandIndexOffset;
+            if (offsetInSegment >= currentSegment.UnbrokenCount + currentSegment.ContiguousBreaking.Count)
+                currentSegment = partitioner[currentSegment.SegmentIndex + 1];
         }
 
         private class RLEPartitioner<T> where T : notnull
         {
+            public int SegmentCount => _Segments.Count;
+            public int CommandOffset
+            {
+                get {
+                    if (_LastSegment == null)
+                        return 0;
+                    return _LastSegment.CommandIndexOffset + 
+                        _LastSegment.UnbrokenCount +
+                        _LastSegment.ContiguousBreaking.Count;
+                }
+            }
+            public RLESegment<T> this[int index] => _Segments[index];
+
             private List<RLESegment<T>> _Segments = new List<RLESegment<T>>();
             private RLESegment<T>? _LastSegment => _Segments.Count > 0 ? _Segments[_Segments.Count - 1] : null;
 
@@ -89,7 +154,7 @@ namespace shellil.VirtualTerminal
                     _LastSegment.UnbrokenCount++;
                 else
                 {
-                    var newSegment = new RLESegment<T>();
+                    var newSegment = new RLESegment<T>(CommandOffset, SegmentCount);
                     newSegment.UnbrokenCount++;
                     _Segments.Add(newSegment);
                 }
@@ -102,7 +167,7 @@ namespace shellil.VirtualTerminal
                     _LastSegment.ContiguousBreaking.Add(uniqueValue);
                 else
                 {
-                    var newSegment = new RLESegment<T>();
+                    var newSegment = new RLESegment<T>(CommandOffset, SegmentCount);
                     newSegment.ContiguousBreaking.Add(uniqueValue);
                 }
             }
@@ -110,8 +175,22 @@ namespace shellil.VirtualTerminal
 
         private class RLESegment<T> where T : notnull
         {
+            public int SegmentIndex { get; }
+            public int CommandIndexOffset { get; }
             public int UnbrokenCount { get; set; } = 0;
             public List<T> ContiguousBreaking { get; } = new List<T>();
+
+            public RLESegment(int offset, int segmentIndex)
+            {
+                CommandIndexOffset = offset;
+                SegmentIndex = segmentIndex;
+            }
+
+            public void WriteHead(BinaryWriter bw)
+            {
+                bw.Write((ushort)UnbrokenCount);
+                bw.Write((ushort)ContiguousBreaking.Count);
+            }
         }
     }
 }
