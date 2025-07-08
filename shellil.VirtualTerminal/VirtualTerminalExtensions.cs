@@ -12,11 +12,11 @@ namespace shellil.VirtualTerminal
         {
             var height = await buffer.GetHeightAsync();
             var cursorPos = await buffer.GetCursorPosAsync();
-            if (cursorPos.y + 1 >= height)
+            if (cursorPos.Y + 1 >= height)
                 await buffer.LineFeedAsync(1);
-            if (cursorPos.x < buffer.Width)
-                await buffer.WriteAsync(new string(' ', buffer.Width - cursorPos.x));
-            await buffer.SetCursorPosAsync(0, cursorPos.y + 1);
+            if (cursorPos.X < buffer.Width)
+                await buffer.WriteAsync(new string(' ', buffer.Width - cursorPos.X));
+            await buffer.SetCursorPosAsync(0, cursorPos.Y + 1);
         }
 
         public static async Task WriteLineAsync(this IVirtualTerminalBuffer buffer, string text)

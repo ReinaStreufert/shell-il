@@ -38,8 +38,19 @@ namespace shellil.VirtualTerminal
         {
             lock (_QueueLock)
             {
-                if (_CommandQueue.Count == 0 || !_CommandQueue[_CommandQueue.Count - 1].TryCoalesce(command))
-                    _CommandQueue.Add(command);
+                if (_CommandQueue.Count > 0)
+                {
+                    var lastCommand = _CommandQueue[_CommandQueue.Count - 1];
+                    var coalesceResult = command.TryCoalesce(lastCommand);
+                    if (coalesceResult == CoalesceResult.MergedReplaceExisting)
+                    {
+                        _CommandQueue[_CommandQueue.Count - 1] = command;
+                        return;
+                    }
+                    else if (coalesceResult == CoalesceResult.MergedDisposeNew)
+                        return;
+                }
+                _CommandQueue.Add(command);
             }
         }
 
@@ -58,12 +69,13 @@ namespace shellil.VirtualTerminal
         public async Task<int> GetHeightAsync()
         {
             await FlushCommandsAsync();
-
+            return _BufferHeight;
         }
 
-        public Task<(int x, int y)> GetCursorPosAsync()
+        public async Task<(int x, int y)> GetCursorPosAsync()
         {
-            throw new NotImplementedException();
+            await FlushCommandsAsync();
+            return (_CursorX, _CursorY);
         }
 
         public Task SetCursorPosAsync(int x, int y)
@@ -145,7 +157,16 @@ namespace shellil.VirtualTerminal
         private interface IBufferCommand
         {
             public Task SendRequestAsync(IVTSocket socket);
-            public bool TryCoalesce(IBufferCommand command);
+            public CoalesceResult TryCoalesce(IBufferCommand existingCommand);
         }
+
+        private enum CoalesceResult
+        {
+            Unmerged,
+            MergedReplaceExisting,
+            MergedDisposeNew
+        }
+
+        
     }
 }

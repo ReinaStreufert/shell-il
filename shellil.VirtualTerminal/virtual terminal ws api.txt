@@ -174,7 +174,13 @@ message[3] = action flags
   from lsb to msb
   bit 0: apply scroll offset?
   bit 1: scroll cursor into view?
-  bit 2: present?
+  bit 2: set cursor state?
+  bit 3: present?
 if apply scroll offset?
-  message[4] = scroll x offset
-  message[5] = scroll y offset
+  message[n++] = scroll x offset
+  message[n++] = scroll y offset
+if set cursor state?
+  message[n++] = cursor state
+    solid = 0x00
+    blink = 0x01
+    invisible = 0x02

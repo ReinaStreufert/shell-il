@@ -121,7 +121,10 @@
         let readControlToken = function (commandBuf, bufIndex, commandIndex, runLengthState) {
             let contiguousUnspecifiedCount = commandBuf[bufIndex++];
             let contiguousSpecifiedCount = commandBuf[bufIndex++];
-            runLengthState.nextControlToken = commandIndex + contiguousSpecifiedCount + 1;
+            var sum = contiguousSpecifiedCount + contiguousUnspecifiedCount;
+            if (sum == 0)
+                throw "Invalid command format";
+            runLengthState.nextControlToken = commandIndex + sum;
             runLengthState.runLengthThreshold = commandIndex + contiguousUnspecifiedCount;
             return bufIndex;
         };

@@ -24,13 +24,15 @@ namespace shellil.VirtualTerminal
     {
         public int Width { get; }
         public Task<int> GetHeightAsync();
-        public Task<(int x, int y)> GetCursorPosAsync();
+        public Task<TerminalPosition> GetCursorPosAsync();
         public Task SetCursorPosAsync(int x, int y);
+        public Task SetCursorPosAsync(TerminalPosition position);
         public Task SetForegroundColorAsync(TerminalColor color);
         public Task SetBackgroundColorAsync(TerminalColor color);
         public Task<TerminalColor> GetForegroundColorAsync();
         public Task<TerminalColor> GetBackgroundColorAsync();
         public Task<IBufferViewport> CreateViewportAsync(int offsetX, int offsetY);
+        public Task<IBufferViewport> CreateViewportAsync(TerminalPosition scrollOffset);
         public Task WriteAsync(string text);
         public Task LineFeedAsync(int count);
     }
