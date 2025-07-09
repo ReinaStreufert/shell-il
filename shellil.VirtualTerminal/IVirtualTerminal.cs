@@ -9,7 +9,7 @@ namespace shellil.VirtualTerminal
 {
     public interface IVirtualTerminalHost
     {
-        public ITerminalDriverFactory DriverFactory { get; }
+        public IVirtualTerminalService Service { get; }
         public Task ListenAsync(IEnumerable<string> httpPrefixes, CancellationToken cancelToken);
     }
 
@@ -35,17 +35,21 @@ namespace shellil.VirtualTerminal
         public Task<IBufferViewport> CreateViewportAsync(TerminalPosition scrollOffset);
         public Task WriteAsync(string text);
         public Task LineFeedAsync(int count);
+        public Task FlushAsync();
     }
 
     public interface IBufferViewport : IAsyncDisposable
     {
         public IVirtualTerminalBuffer SourceBuffer { get; }
-        public Task<(int x, int y)> GetScrollOffsetAsync();
-        public Task SetScrollOffsetAsync(int x, int y);
+        public Task<TerminalPosition> GetScrollOffsetAsync();
+        public Task ScrollToAsync(int x, int y);
+        public Task ScrollToAsync(TerminalPosition scrollOffset);
         public Task ScrollAsync(int x, int y);
+        public Task ScrollAsync(TerminalPosition offset);
         public Task SetCursorStyleAsync(TerminalCursorState cursorState);
         public Task ScrollCursorIntoViewAsync();
         public Task PresentAsync();
+        public Task FlushAsync();
     }
 
     public enum TerminalCursorState

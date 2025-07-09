@@ -19,6 +19,8 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         CB_WRITEBUFFER: 0x02,
         CB_SETBUFFERATTR: 0x03,
         CB_VIEWPORTCOMMAND: 0x04,
+        CB_DESTROYBUFFER: 0x05,
+        CB_DESTROYVIEWPORT: 0x06,
         FLAG_SIZEUPDATED: 1,
         FLAG_CURSORPOSUPDATED: 2,
         FLAG_BGCOLORUPDATED: 4,
@@ -30,10 +32,11 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         FLAG_SETBGCOLOR: 2,
         FLAG_SETFGCOLOR: 4,
         FLAG_LINEFEED: 8,
-        FLAG_SCROLLOFFSET: 1,
-        FLAG_SCROLLCURSORINTOVIEW: 2,
-        FLAG_SETCURSORSTATE: 4,
-        FLAG_PRESENT: 8
+        FLAG_SCROLLTO: 1,
+        FLAG_SCROLLOFFSET: 2,
+        FLAG_SCROLLCURSORINTOVIEW: 4,
+        FLAG_SETCURSORSTATE: 8,
+        FLAG_PRESENT: 16
     };
 
     let remote = {};
@@ -294,6 +297,11 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 let view = remoteObjectState.remoteViewports[viewObjId];
                 let viewState = saveViewportState(view);
                 let i = 4;
+                if (actionFlags & FLAG_SCROLLTO > 0) {
+                    let x = msgBuf[i++];
+                    let y = msgBuf[i++];
+                    view.scrollTo(x, y);
+                }
                 if (actionFlags & FLAG_SCROLLOFFSET > 0) {
                     let offsetX = msgBuf[i++];
                     let offsetY = msgBuf[i++];
@@ -310,6 +318,12 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 ws.send(responseBuf);
                 if (actionFlags & FLAG_PRESENT)
                     view.present();
+            } else if (msgType == net.CB_DESTROYBUFFER) {
+                let bufObjId = msgBuf[1];
+                delete remoteObjectState.remoteBuffers[bufObjId];
+            } else if (msgType == net.CB_DESTROYVIEWPORT) {
+                let bufObjId = msgBuf[1];
+                delete remoteObjectState.remoteViewports[bufObjId];
             }
         };
         ws.addEventListener("open", function (e) {

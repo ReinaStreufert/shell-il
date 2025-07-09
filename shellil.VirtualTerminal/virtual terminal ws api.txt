@@ -130,7 +130,7 @@ message[3] = command count
   a run-length control token is two 16-bit integers
   token[0] = number of commands which do not specify the controlled attribute and instead use the value of the last command
   token[1] = number of additional commands where the controlled attribute is specified
-  the sum of token[0] + token[1] + 1 represents the offset from the current run-length control token to the next of the same attribute
+  the sum of token[0] + token[1] represents the offset from the current run-length control token to the next of the same attribute. it is invalid for both counts to be zero.
 
   the order of conditionally supplied run-length tokens and attributes is listed below. on the first process command, all run-length tokens and attribute values must be included. 
   command[n+=2] = position run-length control token; if indicated by the run-length state
@@ -184,3 +184,9 @@ if set cursor state?
     solid = 0x00
     blink = 0x01
     invisible = 0x02
+
+Client bound 0x05 Destroy buffer
+message[1] = buffer id
+
+Client bound 0x06 Destroy viewport
+message[1] = viewport id

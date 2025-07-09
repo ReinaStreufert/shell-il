@@ -16,9 +16,10 @@ namespace shellil.VirtualTerminal
         public Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y);
     }
 
-    public interface ITerminalDriverFactory
+    public interface IVirtualTerminalService
     {
-        public Task<IVirtualTerminalDriver> CreateDriverAsync();
+        public Task<IVirtualTerminalDriver> AttachDriverAsync();
+        public Task DetachDriverAsync(IVirtualTerminalDriver driver);
     }
 
     public enum TerminalSpecialKey

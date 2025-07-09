@@ -24,6 +24,8 @@ namespace shellil.VirtualTerminal
         public const ushort CB_WRITEBUFFER = 0x02;
         public const ushort CB_SETBUFFERATTR = 0x03;
         public const ushort CB_VIEWPORTCOMMAND = 0x04;
+        public const ushort CB_DESTROYBUFFER = 0x05;
+        public const ushort CB_DESTROYVIEWPORT = 0x06;
 
         [Flags]
         public enum BufferUpdateFlags
@@ -36,13 +38,24 @@ namespace shellil.VirtualTerminal
         }
 
         [Flags]
-        public enum BufferModifyFlags
+        public enum BufferActionFlags
         {
             None = 0,
             SetCursorPos = 1,
             SetBackgroundColor = 2,
             SetForegroundColor = 4,
             ApplyLineFeed = 8
+        }
+
+        [Flags]
+        public enum ViewportActionFlags
+        {
+            None = 0,
+            ScrollTo = 1,
+            ApplyScrollOffset = 2,
+            ScrollCursorIntoView = 4,
+            SetCursorState = 8,
+            Present = 16
         }
     }
 }

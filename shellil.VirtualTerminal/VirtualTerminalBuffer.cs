@@ -20,9 +20,10 @@ namespace shellil.VirtualTerminal
             _CursorY = createdMessageData[5];
             _BackgroundColor = new TerminalColor(createdMessageData[6], createdMessageData[7]);
             _ForegroundColor = new TerminalColor(createdMessageData[8], createdMessageData[9]);
-            socket.AddMessageHandler(VTProtocol.HB_BUFFERUPDATED, HandleBufferUpdatedAsync);
+            _UpdateHandler = socket.AddMessageHandler(VTProtocol.HB_BUFFERUPDATED, HandleBufferUpdatedAsync);
         }
 
+        private IVTMessageHandler _UpdateHandler;
         private IVTSocket _Socket;
         private ushort _BufferId;
         private ushort _BufferWidth;
@@ -54,7 +55,7 @@ namespace shellil.VirtualTerminal
             }
         }
 
-        private async Task FlushCommandsAsync()
+        public async Task FlushAsync()
         {
             List<IBufferCommand> commands;
             lock (_QueueLock)
@@ -68,13 +69,13 @@ namespace shellil.VirtualTerminal
 
         public async Task<int> GetHeightAsync()
         {
-            await FlushCommandsAsync();
+            await FlushAsync();
             return _BufferHeight;
         }
 
         public async Task<TerminalPosition> GetCursorPosAsync()
         {
-            await FlushCommandsAsync();
+            await FlushAsync();
             return new TerminalPosition(_CursorX, _CursorY);
         }
 
@@ -126,24 +127,39 @@ namespace shellil.VirtualTerminal
 
         public async Task<TerminalColor> GetForegroundColorAsync()
         {
-            await FlushCommandsAsync();
+            await FlushAsync();
             return _ForegroundColor;
         }
 
         public async Task<TerminalColor> GetBackgroundColorAsync()
         {
-            await FlushCommandsAsync();
+            await FlushAsync();
             return _BackgroundColor;
         }
 
-        public Task<IBufferViewport> CreateViewportAsync(int offsetX, int offsetY)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<IBufferViewport> CreateViewportAsync(int offsetX, int offsetY) => 
+            CreateViewportAsync(new TerminalPosition((ushort)offsetX, (ushort)offsetX));
 
-        public ValueTask DisposeAsync()
+        public async Task<IBufferViewport> CreateViewportAsync(TerminalPosition scrollOffset)
         {
-            throw new NotImplementedException();
+            var requestId = _Socket.NewRequestId();
+            var tcs = new TaskCompletionSource<IBufferViewport>();
+            var createdMessageHandler = _Socket.AddMessageHandler(VTProtocol.HB_VIEWPORTUPDATED, messageData =>
+            {
+                if (messageData[0] == requestId)
+                    tcs.SetResult(new BufferViewport(this, _Socket, messageData));
+                return Task.CompletedTask;
+            });
+            var createViewMessage = new ushort[5];
+            createViewMessage[0] = VTProtocol.CB_CREATEVIEWPORT;
+            createViewMessage[1] = requestId;
+            createViewMessage[2] = _BufferId;
+            createViewMessage[3] = scrollOffset.X;
+            createViewMessage[4] = scrollOffset.Y;
+            await _Socket.SendMessageAsync(createViewMessage);
+            var result = await tcs.Task;
+            _Socket.RemoveMessageHandler(createdMessageHandler);
+            return result;
         }
 
         private Task HandleBufferUpdatedAsync(ArraySegment<ushort> messageData)
@@ -177,9 +193,13 @@ namespace shellil.VirtualTerminal
             return Task.CompletedTask;
         }
 
-        public Task<IBufferViewport> CreateViewportAsync(TerminalPosition scrollOffset)
+        public async ValueTask DisposeAsync()
         {
-            throw new NotImplementedException();
+            await FlushAsync();
+            var destroyMessage = new ushort[2];
+            destroyMessage[0] = VTProtocol.CB_DESTROYBUFFER;
+            await _Socket.SendMessageAsync(destroyMessage);
+            _Socket.RemoveMessageHandler(_UpdateHandler);
         }
 
         private interface IBufferCommand
@@ -266,17 +286,17 @@ namespace shellil.VirtualTerminal
                 return CoalesceResult.NotMerged;
             }
 
-            private VTProtocol.BufferModifyFlags GetModifyFlags()
+            private VTProtocol.BufferActionFlags GetModifyFlags()
             {
-                var flags = VTProtocol.BufferModifyFlags.None;
+                var flags = VTProtocol.BufferActionFlags.None;
                 if (Seek != null)
-                    flags |= VTProtocol.BufferModifyFlags.SetCursorPos;
+                    flags |= VTProtocol.BufferActionFlags.SetCursorPos;
                 if (NewBackgroundColor != null)
-                    flags |= VTProtocol.BufferModifyFlags.SetBackgroundColor;
+                    flags |= VTProtocol.BufferActionFlags.SetBackgroundColor;
                 if (NewForegroundColor != null)
-                    flags |= VTProtocol.BufferModifyFlags.SetForegroundColor;
+                    flags |= VTProtocol.BufferActionFlags.SetForegroundColor;
                 if (LineFeed != 0)
-                    flags |= VTProtocol.BufferModifyFlags.ApplyLineFeed;
+                    flags |= VTProtocol.BufferActionFlags.ApplyLineFeed;
                 return flags;
             }
 

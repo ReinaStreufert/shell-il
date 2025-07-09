@@ -9,14 +9,14 @@ namespace shellil.VirtualTerminal
 {
     public class VirtualTerminalHost : IVirtualTerminalHost
     {
-        public ITerminalDriverFactory DriverFactory => _DriverFactory;
+        public IVirtualTerminalService Service => _Service;
 
-        public VirtualTerminalHost(ITerminalDriverFactory driverFactory)
+        public VirtualTerminalHost(IVirtualTerminalService driverFactory)
         {
-            _DriverFactory = driverFactory;
+            _Service = driverFactory;
         }
 
-        private ITerminalDriverFactory _DriverFactory;
+        private IVirtualTerminalService _Service;
 
         public async Task ListenAsync(IEnumerable<string> httpPrefixes, CancellationToken cancelToken)
         {
@@ -46,15 +46,33 @@ namespace shellil.VirtualTerminal
 
         public class VTClient
         {
-            public VTClient(VirtualTerminalHost host, IVTSocket socket, IVirtualTerminalDriver driver)
+            public static void InitializeClient(VirtualTerminalHost host, IVTSocket socket, IVirtualTerminalDriver driver)
+            {
+                var client = new VTClient(host, socket, driver);
+                client.AddMessageHandler(VTProtocol.HB_FRONTENDREADY, client.HandleFrontendReadyAsync);
+                client.AddMessageHandler(VTProtocol.HB_VIEWRESIZE, client.HandleViewportResizeAsync);
+                client.AddMessageHandler(VTProtocol.HB_INPUTCHAR, client.HandleInputCharAsync);
+                client.AddMessageHandler(VTProtocol.HB_SPECIALKEY, client.HandleSpecialKeyAsync);
+                client.AddMessageHandler(VTProtocol.HB_USERSCROLL, client.HandleUserScrollAsync);
+                client.AddMessageHandler(VTProtocol.HB_MOUSE, client.HandleMouseEventAsync);
+                socket.SocketClosed += async () => await host._Service.DetachDriverAsync(driver);
+            }
+
+            private VTClient(VirtualTerminalHost host, IVTSocket socket, IVirtualTerminalDriver driver)
             {
                 _Socket = socket;
                 _Driver = driver;
-                _Socket.AddMessageHandler(VTProtocol.HB_FRONTENDREADY, HandleFrontendReadyAsync);
+                _Socket = socket;
             }
 
             private IVTSocket _Socket;
             private IVirtualTerminalDriver _Driver;
+            private List<IVTMessageHandler> _Handlers = new List<IVTMessageHandler>();
+
+            private void AddMessageHandler(ushort messageType, Func<ArraySegment<ushort>, Task> handlerFunc)
+            {
+                _Handlers.Add(_Socket.AddMessageHandler(messageType, handlerFunc));
+            }
 
             private async Task HandleFrontendReadyAsync(ArraySegment<ushort> messageData)
             {

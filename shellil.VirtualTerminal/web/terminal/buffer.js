@@ -8,15 +8,18 @@
             viewportY: 0,
             cursorState: "blink", // solid, blink, invisible
             buffer: buf
-        }
+        };
         view.present = function () {
-            rendering.setActiveViewport(view)
-        }
-        view.scroll = function (x, y) {
+            rendering.setActiveViewport(view);
+        };
+        view.scrollTo = function (x, y) {
             let viewSize = rendering.getViewportSize();
-            view.viewportX = Math.max(0, Math.min(view.viewportX + x, buf.bufferWidth - viewSize.w));
-            view.viewportY = Math.max(0, Math.min(view.viewportY + y, buf.getBufferHeight() - viewSize.h));
-        }
+            view.viewportX = Math.max(0, Math.min(x, buf.bufferWidth - viewSize.w));
+            view.viewportY = Math.max(0, Math.min(y, buf.getBufferHeight() - viewSize.h));
+        };
+        view.scroll = function (x, y) {
+            view.scrollTo(view.viewportX + x, view.viewportY + y);
+        };
         view.scrollCursorIntoView = function () {
             let viewSize = rendering.getViewportSize();
             let cursorX = buf.cursorX;
@@ -33,7 +36,7 @@
                 view.viewportY = cursorY;
             else if (cursorY > viewSrcBottom)
                 view.viewportY = cursorY - (viewSize.h - 1);
-        }
+        };
         view.getSnapshot = function () {
             let viewSize = rendering.getViewportSize();
             let bufSize = { w: buf.bufferWidth, h: buf.getBufferHeight() };
@@ -58,7 +61,7 @@
                 cursorY: buf.cursorY - view.viewportY,
                 cursorState: view.cursorState
             };
-        }
+        };
         return view;
     };
 
