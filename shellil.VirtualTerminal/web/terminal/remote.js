@@ -73,6 +73,7 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
             idCounter: 0
         };
         let ws = new WebSocket(hosturl);
+        ws.binaryType = "arraybuffer";
         let interopDispatcherCallback = function (interopEvent) {
             if (interopEvent.event == "ViewportResize") {
                 let buf = new Uint16Array(3);
@@ -202,7 +203,7 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
             }
         }
         let onMessage = function (e) {
-            let msgBuf = e.data;
+            let msgBuf = new Uint16Array(e.data, 0, e.data.byteLength / 2);
             let msgType = msgBuf[0];
             if (msgType == net.CB_CREATEBUFFER) {
                 let requestId = msgBuf[1];
@@ -326,8 +327,11 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 delete remoteObjectState.remoteViewports[bufObjId];
             }
         };
+        console.log("connecting");
         ws.addEventListener("open", function (e) {
+            console.log("connected");
             vtcanvas.setInteropInit(function () {
+                console.log("initialized");
                 vtcanvas.setInteropDispatcher(interopDispatcherCallback);
                 ws.addEventListener("message", onMessage);
                 let msgBuf = new Uint16Array(3);
@@ -337,6 +341,9 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 msgBuf[2] = viewportSize.h;
                 ws.send(msgBuf);
             });
+        });
+        ws.addEventListener("error", function (e) {
+            console.log(e);
         });
     };
 })();

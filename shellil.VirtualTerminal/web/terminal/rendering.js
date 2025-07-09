@@ -17,6 +17,22 @@
         lastFrameHeight: 0
     };
 
+    rendering.renderload = function () {
+        let ctx = vtcanvas.context;
+        ctx.textBaseline = "middle";
+        ctx.font = consts.font;
+        ctx.fontKerning = "none";
+        ctx.imageSmoothingEnabled = false;
+        metrics.monospace = ((function () {
+            let precision = 200;
+            let monospaceMetric = ctx.measureText(" ".repeat(precision));
+            return {
+                w: (monospaceMetric.width) / precision,
+                h: (Math.abs(monospaceMetric.fontBoundingBoxAscent) + Math.abs(monospaceMetric.fontBoundingBoxDescent))
+            };
+        }))();
+    };
+
     rendering.setActiveViewport = function (buf) {
         snapshot.active = buf.getSnapshot();
         snapshot.lastPresentTime = snapshot.lastFrameTime;
@@ -118,21 +134,7 @@
         snapshot.lastFrameTime = uptime;
         let canv = vtcanvas.element;
         let ctx = vtcanvas.context;
-        
-        ctx.textBaseline = "middle";
-        ctx.font = consts.font;
-        ctx.fontKerning = "none";
-        ctx.imageSmoothingEnabled = false;
-        if (metrics.monospace == null) {
-            metrics.monospace = ((function () {
-                let precision = 200;
-                let monospaceMetric = ctx.measureText(" ".repeat(precision));
-                return {
-                    w: (monospaceMetric.width) / precision,
-                    h: (Math.abs(monospaceMetric.fontBoundingBoxAscent) + Math.abs(monospaceMetric.fontBoundingBoxDescent))
-                };
-            }))();
-        }
+
         let canvasWidth = canv.width;
         let canvasHeight = canv.height;
         if (canvasWidth != snapshot.lastFrameWidth || canvasHeight != snapshot.lastFrameHeight) {

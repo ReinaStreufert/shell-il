@@ -45,7 +45,7 @@ namespace shellil.VirtualTerminal
         {
             var messageBytes = new byte[message.Length * 2];
             Buffer.BlockCopy(message, 0, messageBytes, 0, messageBytes.Length);
-            await _Socket.SendAsync(messageBytes, WebSocketMessageType.Binary, false, _CTokenSource.Token);
+            await _Socket.SendAsync(messageBytes, WebSocketMessageType.Binary, true, _CTokenSource.Token);
         }
 
         private async Task ListenAsync()

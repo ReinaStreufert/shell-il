@@ -1,6 +1,7 @@
 ﻿using LibChromeDotNet.HTML5.DOM;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,6 +21,7 @@ namespace shellil.VirtualTerminal
 
         public async Task OnReadyAsync(IVirtualTerminalContext ctx)
         {
+            Debug.WriteLine("ready");
             var bufferWidth = _InitialBufferText.Select(l => l.Length).Max();
             var buffer = await ctx.CreateBufferAsync(bufferWidth);
             await buffer.LineFeedAsync(_InitialBufferText.Length - 1);

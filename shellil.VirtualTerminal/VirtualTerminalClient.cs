@@ -30,6 +30,7 @@ namespace shellil.VirtualTerminal
         public async Task OnStartupAsync(IAppContext context)
         {
             var window = await context.OpenWindowAsync();
+            await Task.Delay(5000);
             await using (var attachFuncJs = (IJSFunction)await window.EvaluateJSExpressionAsync("vtcanvas.remote.attachToRemoteClient"))
                 await attachFuncJs.CallAsync(IJSValue.FromString(_DriverHostUrl));
         }
