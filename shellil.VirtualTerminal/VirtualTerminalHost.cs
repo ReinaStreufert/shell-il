@@ -135,14 +135,10 @@ namespace shellil.VirtualTerminal
                     throw new ArgumentOutOfRangeException(nameof(cols));
                 var requestId = _Socket.NewRequestId();
                 var tcs = new TaskCompletionSource<IVirtualTerminalBuffer>();
-                IVTMessageHandler? createdHandler = null;
-                createdHandler = _Socket.AddMessageHandler(VTProtocol.HB_BUFFERCREATED, messageData =>
+                var createdHandler = _Socket.AddMessageHandler(VTProtocol.HB_BUFFERCREATED, messageData =>
                 {
                     if (messageData[0] == requestId)
-                    {
-                        _Socket.RemoveMessageHandler(createdHandler!);
                         tcs.SetResult(new VirtualTerminalBuffer(_Socket, messageData));
-                    }
                     return Task.CompletedTask;
                 });
                 var createMessage = new ushort[3];
@@ -150,7 +146,9 @@ namespace shellil.VirtualTerminal
                 createMessage[1] = requestId;
                 createMessage[2] = (ushort)cols;
                 await _Socket.SendMessageAsync(createMessage);
-                return await tcs.Task;
+                var result = await tcs.Task;
+                _Socket.RemoveMessageHandler(createdHandler);
+                return result;
             }
         }
     }

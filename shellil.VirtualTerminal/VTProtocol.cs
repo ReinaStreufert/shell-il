@@ -26,12 +26,23 @@ namespace shellil.VirtualTerminal
         public const ushort CB_VIEWPORTCOMMAND = 0x04;
 
         [Flags]
-        public enum BufferChangeFlags
+        public enum BufferUpdateFlags
         {
+            None = 0,
             BufferSize = 1,
             CursorPos = 2,
             BackgroundColor = 4,
             ForegroundColor = 8
+        }
+
+        [Flags]
+        public enum BufferModifyFlags
+        {
+            None = 0,
+            SetCursorPos = 1,
+            SetBackgroundColor = 2,
+            SetForegroundColor = 4,
+            ApplyLineFeed = 8
         }
     }
 }

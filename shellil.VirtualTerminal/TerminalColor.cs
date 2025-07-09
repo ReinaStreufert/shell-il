@@ -29,16 +29,17 @@ namespace shellil.VirtualTerminal
             A = (byte)(ba & 255);
         }
 
-        public void Encode(ushort[] buf, int offset)
+        public int Encode(ushort[] buf, int offset)
         {
             buf[offset] = (ushort)((R << 8) | G);
             buf[offset + 1] = (ushort)((B << 8) | A);
+            return offset + 2;
         }
 
-        public void Encode(BinaryWriter bw)
+        public void Encode(MemoryStream16 ms)
         {
-            bw.Write((ushort)((R << 8) | G));
-            bw.Write((ushort)((B << 8) | A));
+            ms.Write((ushort)((R << 8) | G));
+            ms.Write((ushort)((B << 8) | A));
         }
     }
 

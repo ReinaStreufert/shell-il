@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace shellil.VirtualTerminal
 {
-    public class BufferWriteEncoder
+    public class BufferWriteEncoder : IBufferWriteEncoder
     {
         private RLEPartitioner<char> _Text = new RLEPartitioner<char>();
         private RLEPartitioner<TerminalColor> _BackgroundColor = new RLEPartitioner<TerminalColor>();
@@ -73,53 +73,50 @@ namespace shellil.VirtualTerminal
             _PosInvalidated = false;
         }
 
-        public void Encode(Stream outputStream)
+        public void Encode(MemoryStream16 ms)
         {
-            using (BinaryWriter bw = new BinaryWriter(outputStream))
+            ms.Write((ushort)_CommandCount);
+            var textSegment = _Text[0];
+            var bgcSegment = _BackgroundColor[0];
+            var fgcSegment = _ForegroundColor[0];
+            var posSegment = _Position[0];
+            for (int i = 0; i < _CommandCount; i++)
             {
-                bw.Write((ushort)_CommandCount);
-                var textSegment = _Text[0];
-                var bgcSegment = _BackgroundColor[0];
-                var fgcSegment = _ForegroundColor[0];
-                var posSegment = _Position[0];
-                for (int i = 0; i <  _CommandCount; i++)
-                {
-                    EnsureSegmentAlignment(_Position, ref posSegment, i);
-                    EnsureSegmentAlignment(_BackgroundColor, ref bgcSegment, i);
-                    EnsureSegmentAlignment(_ForegroundColor, ref fgcSegment, i);
-                    EnsureSegmentAlignment(_Text, ref textSegment, i);
-                    var offsetInPosSeg = i - posSegment.CommandIndexOffset;
-                    var offsetInBgcSeg = i - bgcSegment.CommandIndexOffset;
-                    var offsetInFgcSeg = i - fgcSegment.CommandIndexOffset;
-                    var offsetInTextSeg = i - textSegment.CommandIndexOffset;
+                EnsureSegmentAlignment(_Position, ref posSegment, i);
+                EnsureSegmentAlignment(_BackgroundColor, ref bgcSegment, i);
+                EnsureSegmentAlignment(_ForegroundColor, ref fgcSegment, i);
+                EnsureSegmentAlignment(_Text, ref textSegment, i);
+                var offsetInPosSeg = i - posSegment.CommandIndexOffset;
+                var offsetInBgcSeg = i - bgcSegment.CommandIndexOffset;
+                var offsetInFgcSeg = i - fgcSegment.CommandIndexOffset;
+                var offsetInTextSeg = i - textSegment.CommandIndexOffset;
 
-                    if (offsetInPosSeg == 0)
-                        posSegment.WriteHead(bw);
-                    if (offsetInPosSeg >= posSegment.UnbrokenCount)
-                    {
-                        var seekPosition = posSegment.ContiguousBreaking[offsetInPosSeg - posSegment.UnbrokenCount];
-                        bw.Write(seekPosition.X);
-                        bw.Write(seekPosition.Y);
-                    }
-                    if (offsetInBgcSeg == 0)
-                        bgcSegment.WriteHead(bw);
-                    if (offsetInBgcSeg >= bgcSegment.UnbrokenCount)
-                    {
-                        var uniqueBackgroundColor = bgcSegment.ContiguousBreaking[offsetInBgcSeg - bgcSegment.UnbrokenCount];
-                        uniqueBackgroundColor.Encode(bw);
-                    }
-                    if (offsetInFgcSeg == 0)
-                        fgcSegment.WriteHead(bw);
-                    if (offsetInFgcSeg >= fgcSegment.UnbrokenCount)
-                    {
-                        var uniqueForegroundColor = fgcSegment.ContiguousBreaking[offsetInFgcSeg - fgcSegment.UnbrokenCount];
-                        uniqueForegroundColor.Encode(bw);
-                    }
-                    if (offsetInTextSeg == 0)
-                        textSegment.WriteHead(bw);
-                    if (offsetInTextSeg >= textSegment.UnbrokenCount)
-                        bw.Write((ushort)textSegment.ContiguousBreaking[offsetInTextSeg - textSegment.UnbrokenCount]);
+                if (offsetInPosSeg == 0)
+                    posSegment.WriteHead(ms);
+                if (offsetInPosSeg >= posSegment.UnbrokenCount)
+                {
+                    var seekPosition = posSegment.ContiguousBreaking[offsetInPosSeg - posSegment.UnbrokenCount];
+                    ms.Write(seekPosition.X);
+                    ms.Write(seekPosition.Y);
                 }
+                if (offsetInBgcSeg == 0)
+                    bgcSegment.WriteHead(ms);
+                if (offsetInBgcSeg >= bgcSegment.UnbrokenCount)
+                {
+                    var uniqueBackgroundColor = bgcSegment.ContiguousBreaking[offsetInBgcSeg - bgcSegment.UnbrokenCount];
+                    uniqueBackgroundColor.Encode(ms);
+                }
+                if (offsetInFgcSeg == 0)
+                    fgcSegment.WriteHead(ms);
+                if (offsetInFgcSeg >= fgcSegment.UnbrokenCount)
+                {
+                    var uniqueForegroundColor = fgcSegment.ContiguousBreaking[offsetInFgcSeg - fgcSegment.UnbrokenCount];
+                    uniqueForegroundColor.Encode(ms);
+                }
+                if (offsetInTextSeg == 0)
+                    textSegment.WriteHead(ms);
+                if (offsetInTextSeg >= textSegment.UnbrokenCount)
+                    ms.Write((ushort)textSegment.ContiguousBreaking[offsetInTextSeg - textSegment.UnbrokenCount]);
             }
         }
 
@@ -186,10 +183,10 @@ namespace shellil.VirtualTerminal
                 SegmentIndex = segmentIndex;
             }
 
-            public void WriteHead(BinaryWriter bw)
+            public void WriteHead(MemoryStream16 ms)
             {
-                bw.Write((ushort)UnbrokenCount);
-                bw.Write((ushort)ContiguousBreaking.Count);
+                ms.Write((ushort)UnbrokenCount);
+                ms.Write((ushort)ContiguousBreaking.Count);
             }
         }
     }
