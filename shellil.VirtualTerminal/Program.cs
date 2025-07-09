@@ -13,8 +13,10 @@ namespace shellil.VirtualTerminal
     {
         public static async Task Main(string[] args)
         {
-            var client = new DebugTerminalDriver("pemdas.nlisp");
-            var terminal = new VirtualTerminalClient(client);
+            string hostUrl = "http://localhost:54321/";
+            var host = new VirtualTerminalHost(new DebugTerminalService());
+            _ = host.ListenAsync(new string[] { hostUrl }, CancellationToken.None);
+            var terminal = new VirtualTerminalClient(hostUrl);
             await terminal.LaunchAsync();
         }
     }

@@ -41,6 +41,7 @@ namespace shellil.VirtualTerminal
                 var webSocketContext = await listenerContext.AcceptWebSocketAsync(null);
                 var webSocket = webSocketContext.WebSocket;
                 var vtSocket = new VTWebSocket(webSocket);
+                VTClient.InitializeClient(this, vtSocket, await _Service.AttachDriverAsync());
             }
         }
 

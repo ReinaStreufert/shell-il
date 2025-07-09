@@ -22,19 +22,16 @@ namespace shellil.VirtualTerminal
         {
             var bufferWidth = _InitialBufferText.Select(l => l.Length).Max();
             var buffer = await ctx.CreateBufferAsync(bufferWidth);
+            await buffer.LineFeedAsync(_InitialBufferText.Length - 1);
             for (int y = 0; y < _InitialBufferText.Length; y++)
-                await buffer.WriteLineAsync(_InitialBufferText[y]);
+            {
+                await buffer.SetCursorPosAsync(0, y);
+                await buffer.WriteAsync(_InitialBufferText[y]);
+            }
             await buffer.SetCursorPosAsync(0, 0);
             var view = await buffer.CreateViewportAsync(0, 0);
             _Buffer = buffer;
             _View = view;
-
-            /*var appWindow = ctx.GetAppWindow();
-            var docBody = await appWindow.GetDocumentBodyAsync();
-            var bgColorInput = await HTMLInputElement.FromDOMNodeAsync(await docBody.QuerySelectAsync("#bginput"));
-            var fgColorInput = await HTMLInputElement.FromDOMNodeAsync(await docBody.QuerySelectAsync("#fginput"));
-            bgColorInput.ValueChanged += async () => await buffer.SetBackgroundColorAsync(bgColorInput.Value);
-            fgColorInput.ValueChanged += async () => await buffer.SetForegroundColorAsync(fgColorInput.Value);*/
             await _View.PresentAsync();
         }
 
@@ -106,7 +103,7 @@ namespace shellil.VirtualTerminal
             if (type == TerminalMouseEventType.MouseDown)
             {
                 var scrollOffset = await _View.GetScrollOffsetAsync();
-                await _Buffer.SetCursorPosAsync(scrollOffset.x + x, scrollOffset.y + y);
+                await _Buffer.SetCursorPosAsync(scrollOffset.X + x, scrollOffset.Y + y);
                 await _View.PresentAsync();
             }
         }
