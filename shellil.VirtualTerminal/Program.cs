@@ -20,7 +20,13 @@ namespace shellil.VirtualTerminal
                 encoder.SetCursorPosition(new TerminalPosition(0, i));
                 encoder.Write(lines[i]);
             }
-            encoder.Encode(new MemoryStream16());*/
+            var ms = new MemoryStream16();
+            encoder.Encode(ms);
+            var arr = ms.ToArray();
+            for (int i = 0; i <  arr.Length; i++)
+            {
+                Console.WriteLine($"0x{i.ToString("X2")}: 0x{arr[i].ToString("X2")}");
+            }*/
             string hostUrl = "http://localhost:54321/";
             var host = new VirtualTerminalHost(new DebugTerminalService());
             _ = host.ListenAsync(new string[] { hostUrl }, CancellationToken.None);
