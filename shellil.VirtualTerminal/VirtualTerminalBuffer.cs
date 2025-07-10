@@ -144,7 +144,7 @@ namespace shellil.VirtualTerminal
         {
             var requestId = _Socket.NewRequestId();
             var tcs = new TaskCompletionSource<IBufferViewport>();
-            var createdMessageHandler = _Socket.AddMessageHandler(VTProtocol.HB_VIEWPORTUPDATED, messageData =>
+            var createdMessageHandler = _Socket.AddMessageHandler(VTProtocol.HB_VIEWPORTCREATED, messageData =>
             {
                 if (messageData[0] == requestId)
                     tcs.SetResult(new BufferViewport(this, _Socket, messageData));

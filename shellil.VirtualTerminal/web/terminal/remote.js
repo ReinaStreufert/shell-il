@@ -144,23 +144,23 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
             let msgLen = 3; // message type, buffer id, change flags
             let changeFlags = 0;
             if (sizeUpdated) {
-                changeFlags |= FLAG_SIZEUPDATED;
+                changeFlags |= net.FLAG_SIZEUPDATED;
                 msgLen += 2
             }
             if (cursorPosUpdated) {
-                changeFlags |= FLAG_CURSORPOSUPDATED;
+                changeFlags |= net.FLAG_CURSORPOSUPDATED;
                 msgLen += 2;
             }
             if (bgColorUpdated) {
-                changeFlags |= FLAG_BGCOLORUPDATED;
+                changeFlags |= net.FLAG_BGCOLORUPDATED;
                 msgLen += 2;
             }
             if (fgColorUpdated) {
-                changeFlags |= FLAG_FGCOLORUPDATED;
+                changeFlags |= net.FLAG_FGCOLORUPDATED;
                 msgLen += 2;
             }
             let msgBuf = new Uint16Array(msgLen);
-            msgBuf[0] = HB_BUFFERUPDATED;
+            msgBuf[0] = net.HB_BUFFERUPDATED;
             msgBuf[1] = bufferId;
             msgBuf[2] = changeFlags;
             let n = 3;
@@ -194,7 +194,7 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         let notifyViewportChanges = function (viewportId, viewState, view) {
             if (viewState.viewportX != view.viewportX || viewState.viewportY != view.viewportY || viewState.cursorState != view.cursorState) {
                 let msgBuf = new Uint16Array(5);
-                msgBuf[0] = HB_VIEWPORTUPDATED;
+                msgBuf[0] = net.HB_VIEWPORTUPDATED;
                 msgBuf[1] = viewportId;
                 msgBuf[2] = view.viewportX;
                 msgBuf[3] = view.viewportY;

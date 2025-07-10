@@ -15,10 +15,9 @@ namespace shellil.VirtualTerminal
         {
             string hostUrl = "http://localhost:54321/";
             var host = new VirtualTerminalHost(new DebugTerminalService());
-            var listenerTask = host.ListenAsync(new string[] { hostUrl }, CancellationToken.None);
+            _ = host.ListenAsync(new string[] { hostUrl }, CancellationToken.None);
             var terminal = new VirtualTerminalClient(hostUrl);
-            _ = terminal.LaunchAsync();
-            await listenerTask;
+            await terminal.LaunchAsync();
         }
     }
 }

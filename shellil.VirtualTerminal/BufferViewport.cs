@@ -101,6 +101,8 @@ namespace shellil.VirtualTerminal
                 return Task.CompletedTask;
             });
             await _Socket.SendMessageAsync(commandMessage);
+            await tcs.Task;
+            _Socket.RemoveMessageHandler(reqProcessedHandler);
         }
 
         public async Task<TerminalPosition> GetScrollOffsetAsync()
