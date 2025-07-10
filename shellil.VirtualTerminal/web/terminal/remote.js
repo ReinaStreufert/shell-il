@@ -74,6 +74,21 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
         };
         let ws = new WebSocket(hosturl);
         ws.binaryType = "arraybuffer";
+
+        let readSigned = function (n) {
+            if ((n & (1 << 15)) > 0)
+                return 0 - (n & (65535 >> 1));
+            else
+                return n;
+        }
+
+        let writeSigned = function (n) {
+            if (n < 0)
+                return (0 - n) | (1 << 15);
+            else
+                return n;
+        }
+
         let interopDispatcherCallback = function (interopEvent) {
             if (interopEvent.event == "ViewportResize") {
                 let buf = new Uint16Array(3);
@@ -96,8 +111,8 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
             } else if (interopEvent.event == "UserScroll") {
                 let buf = new Uint16Array(3);
                 buf[0] = net.HB_USERSCROLL;
-                buf[1] = interopEvent.offsetX;
-                buf[2] = interopEvent.offsetY;
+                buf[1] = writeSigned(interopEvent.offsetX);
+                buf[2] = writeSigned(interopEvent.offsetY);
                 ws.send(buf);
             } else if (interopEvent.event == "MouseEvent") {
                 let buf = new Uint16Array(4);
@@ -277,13 +292,7 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                     buf.fg = remote.decodeColor(rg, ba);
                 }
                 if ((actionFlags & net.FLAG_LINEFEED) > 0) {
-                    let lineOffsetUnsigned = msgBuf[i++];
-                    let lineOffset;
-                    // check for sign bit
-                    if (lineOffsetUnsigned & (1 << 15) > 0)
-                        lineOffset = 0 - (lineOffsetUnsigned & (65535 >> 1));
-                    else
-                        lineOffset = lineOffsetUnsigned;
+                    let lineOffset = readSigned(msgBuf[i++]);
                     buf.lineFeed(lineOffset);
                 }
                 notifyBufferChanges(bufObjId, bufState, buf);
@@ -304,8 +313,8 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                     view.scrollTo(x, y);
                 }
                 if ((actionFlags & net.FLAG_SCROLLOFFSET) > 0) {
-                    let offsetX = msgBuf[i++];
-                    let offsetY = msgBuf[i++];
+                    let offsetX = readSigned(msgBuf[i++]);
+                    let offsetY = readSigned(msgBuf[i++]);
                     view.scroll(offsetX, offsetY);
                 }
                 if ((actionFlags & net.FLAG_SCROLLCURSORINTOVIEW) > 0)

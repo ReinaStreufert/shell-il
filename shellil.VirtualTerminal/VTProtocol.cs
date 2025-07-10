@@ -27,6 +27,22 @@ namespace shellil.VirtualTerminal
         public const ushort CB_DESTROYBUFFER = 0x05;
         public const ushort CB_DESTROYVIEWPORT = 0x06;
 
+        public static ushort WriteSigned(int value)
+        {
+            if (value < 0)
+                return (ushort)(-value | (1 << 15));
+            else
+                return (ushort)value;
+        }
+
+        public static int ReadSigned(ushort value)
+        {
+            if ((value & (1 << 15)) > 0)
+                return 0 - (value & (ushort.MaxValue >> 1));
+            else
+                return value;
+        }
+
         [Flags]
         public enum BufferUpdateFlags
         {

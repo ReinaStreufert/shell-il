@@ -116,8 +116,8 @@ namespace shellil.VirtualTerminal
             {
                 if (messageData.Count != 2)
                     throw new ProtocolViolationException();
-                var deltaX = messageData[0];
-                var deltaY = messageData[1];
+                var deltaX = VTProtocol.ReadSigned(messageData[0]);
+                var deltaY = VTProtocol.ReadSigned(messageData[1]);
                 await _Driver.OnUserScrollAsync(deltaX, deltaY);
             }
 

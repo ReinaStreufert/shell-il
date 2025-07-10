@@ -255,7 +255,7 @@ namespace shellil.VirtualTerminal
                 if (NewForegroundColor != null)
                     i = NewForegroundColor.Encode(attributeMessage, i);
                 if (LineFeed != 0)
-                    attributeMessage[i++] = (ushort)LineFeed;
+                    attributeMessage[i++] = VTProtocol.WriteSigned(LineFeed);
                 await socket.SendMessageAsync(attributeMessage);
                 await tcs.Task;
                 socket.RemoveMessageHandler(reqProcessedHandler);

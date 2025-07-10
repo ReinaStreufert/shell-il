@@ -116,7 +116,7 @@ namespace shellil.VirtualTerminal
             await FlushAsync(true);
         }
 
-        public Task ScrollAsync(int x, int y) => ScrollAsync(new TerminalPosition((ushort)x, (ushort)y));
+        public Task ScrollAsync(int x, int y) => ScrollAsync(new TerminalPosition(x, y));
 
         public async Task ScrollAsync(TerminalPosition offset)
         {
@@ -131,7 +131,7 @@ namespace shellil.VirtualTerminal
             }
         }
 
-        public Task ScrollToAsync(int x, int y) => ScrollToAsync(new TerminalPosition((ushort)x, (ushort)y));
+        public Task ScrollToAsync(int x, int y) => ScrollToAsync(new TerminalPosition(x, y));
 
         public async Task ScrollToAsync(TerminalPosition scrollOffset)
         {

@@ -55,5 +55,11 @@ namespace shellil.VirtualTerminal
             X = x;
             Y = y;
         }
+
+        public TerminalPosition(int x, int y)
+        {
+            X = VTProtocol.WriteSigned(x);
+            Y = VTProtocol.WriteSigned(y);
+        }
     }
 }
