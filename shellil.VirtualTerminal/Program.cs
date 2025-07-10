@@ -25,7 +25,8 @@ namespace shellil.VirtualTerminal
             var arr = ms.ToArray();
             for (int i = 0; i <  arr.Length; i++)
             {
-                Console.WriteLine($"0x{i.ToString("X2")}: 0x{arr[i].ToString("X2")}");
+                var val = arr[i];
+                Console.WriteLine($"0x{i.ToString("X2")}: 0x{val.ToString("X2")} '{(char.IsControl((char)val) ? ' ' : (char)val)}'");
             }*/
             string hostUrl = "http://localhost:54321/";
             var host = new VirtualTerminalHost(new DebugTerminalService());

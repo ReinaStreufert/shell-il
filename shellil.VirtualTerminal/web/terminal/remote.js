@@ -249,7 +249,7 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 let buf = remoteObjectState.remoteBuffers[bufObjId];
                 let bufState = saveBufferState(buf);
                 let commandCount = msgBuf[3];
-                buf.writeCommands(msgBuf.subarray(3), commandCount);
+                buf.writeCommands(msgBuf.subarray(4), commandCount);
                 notifyBufferChanges(bufObjId, bufState, buf);
                 let responseBuf = new Uint16Array(2);
                 responseBuf[0] = net.HB_REQUESTPROCESSED;
@@ -262,21 +262,21 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 let buf = remoteObjectState.remoteBuffers[bufObjId];
                 let bufState = saveBufferState(buf);
                 let i = 4;
-                if (actionFlags & net.FLAG_SETCURSORPOS > 0) {
+                if ((actionFlags & net.FLAG_SETCURSORPOS) > 0) {
                     buf.cursorX = msgBuf[i++];
                     buf.cursorY = msgBuf[i++];
                 }
-                if (actionFlags & net.FLAG_SETBGCOLOR > 0) {
+                if ((actionFlags & net.FLAG_SETBGCOLOR) > 0) {
                     let rg = msgBuf[i++];
                     let ba = msgBuf[i++];
                     buf.bg = remote.decodeColor(rg, ba);
                 }
-                if (actionFlags & net.FLAG_SETFGCOLOR > 0) {
+                if ((actionFlags & net.FLAG_SETFGCOLOR) > 0) {
                     let rg = msgBuf[i++];
                     let ba = msgBuf[i++];
                     buf.fg = remote.decodeColor(rg, ba);
                 }
-                if (actionFlags & net.FLAG_LINEFEED > 0) {
+                if ((actionFlags & net.FLAG_LINEFEED) > 0) {
                     let lineOffsetUnsigned = msgBuf[i++];
                     let lineOffset;
                     // check for sign bit
@@ -298,26 +298,26 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 let view = remoteObjectState.remoteViewports[viewObjId];
                 let viewState = saveViewportState(view);
                 let i = 4;
-                if (actionFlags & net.FLAG_SCROLLTO > 0) {
+                if ((actionFlags & net.FLAG_SCROLLTO) > 0) {
                     let x = msgBuf[i++];
                     let y = msgBuf[i++];
                     view.scrollTo(x, y);
                 }
-                if (actionFlags & net.FLAG_SCROLLOFFSET > 0) {
+                if ((actionFlags & net.FLAG_SCROLLOFFSET) > 0) {
                     let offsetX = msgBuf[i++];
                     let offsetY = msgBuf[i++];
                     view.scroll(offsetX, offsetY);
                 }
-                if (actionFlags & net.FLAG_SCROLLCURSORINTOVIEW)
+                if ((actionFlags & net.FLAG_SCROLLCURSORINTOVIEW) > 0)
                     view.scrollCursorIntoView();
-                if (actionFlags & net.FLAG_SETCURSORSTATE)
+                if ((actionFlags & net.FLAG_SETCURSORSTATE) > 0)
                     decodeCursorState(msgBuf[i++]);
                 notifyViewportChanges(viewObjId, viewState, view);
                 let responseBuf = new Uint16Array(2);
                 responseBuf[0] = net.HB_REQUESTPROCESSED;
                 responseBuf[1] = requestId;
                 ws.send(responseBuf);
-                if (actionFlags & net.FLAG_PRESENT)
+                if ((actionFlags & net.FLAG_PRESENT) > 0)
                     view.present();
             } else if (msgType == net.CB_DESTROYBUFFER) {
                 let bufObjId = msgBuf[1];
