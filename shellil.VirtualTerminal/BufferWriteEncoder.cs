@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -71,6 +72,7 @@ namespace shellil.VirtualTerminal
             _BGInvalidated = false;
             _FGInvalidated = false;
             _PosInvalidated = false;
+            _LastWrittenChar = c;
         }
 
         public void Encode(MemoryStream16 ms)
@@ -166,6 +168,7 @@ namespace shellil.VirtualTerminal
                 {
                     var newSegment = new RLESegment<T>(CommandOffset, SegmentCount);
                     newSegment.ContiguousBreaking.Add(uniqueValue);
+                    _Segments.Add(newSegment);
                 }
             }
         }

@@ -13,6 +13,14 @@ namespace shellil.VirtualTerminal
     {
         public static async Task Main(string[] args)
         {
+            /*var encoder = new BufferWriteEncoder();
+            var lines = File.ReadAllLines("pemdas.nlisp");
+            for (ushort i = 0; i < lines.Length; i++)
+            {
+                encoder.SetCursorPosition(new TerminalPosition(0, i));
+                encoder.Write(lines[i]);
+            }
+            encoder.Encode(new MemoryStream16());*/
             string hostUrl = "http://localhost:54321/";
             var host = new VirtualTerminalHost(new DebugTerminalService());
             _ = host.ListenAsync(new string[] { hostUrl }, CancellationToken.None);

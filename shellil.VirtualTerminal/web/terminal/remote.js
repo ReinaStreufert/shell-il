@@ -298,26 +298,26 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 let view = remoteObjectState.remoteViewports[viewObjId];
                 let viewState = saveViewportState(view);
                 let i = 4;
-                if (actionFlags & FLAG_SCROLLTO > 0) {
+                if (actionFlags & net.FLAG_SCROLLTO > 0) {
                     let x = msgBuf[i++];
                     let y = msgBuf[i++];
                     view.scrollTo(x, y);
                 }
-                if (actionFlags & FLAG_SCROLLOFFSET > 0) {
+                if (actionFlags & net.FLAG_SCROLLOFFSET > 0) {
                     let offsetX = msgBuf[i++];
                     let offsetY = msgBuf[i++];
                     view.scroll(offsetX, offsetY);
                 }
-                if (actionFlags & FLAG_SCROLLCURSORINTOVIEW)
+                if (actionFlags & net.FLAG_SCROLLCURSORINTOVIEW)
                     view.scrollCursorIntoView();
-                if (actionFlags & FLAG_SETCURSORSTATE)
+                if (actionFlags & net.FLAG_SETCURSORSTATE)
                     decodeCursorState(msgBuf[i++]);
                 notifyViewportChanges(viewObjId, viewState, view);
                 let responseBuf = new Uint16Array(2);
                 responseBuf[0] = net.HB_REQUESTPROCESSED;
                 responseBuf[1] = requestId;
                 ws.send(responseBuf);
-                if (actionFlags & FLAG_PRESENT)
+                if (actionFlags & net.FLAG_PRESENT)
                     view.present();
             } else if (msgType == net.CB_DESTROYBUFFER) {
                 let bufObjId = msgBuf[1];
