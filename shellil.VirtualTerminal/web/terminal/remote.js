@@ -336,11 +336,8 @@ by the device which hosts the CDP connection or by a remote virtual terminal cli
                 delete remoteObjectState.remoteViewports[bufObjId];
             }
         };
-        console.log("connecting");
         ws.addEventListener("open", function (e) {
-            console.log("connected");
             vtcanvas.setInteropInit(function () {
-                console.log("initialized");
                 vtcanvas.setInteropDispatcher(interopDispatcherCallback);
                 ws.addEventListener("message", onMessage);
                 let msgBuf = new Uint16Array(3);
