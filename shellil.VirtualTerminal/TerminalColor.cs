@@ -61,5 +61,14 @@ namespace shellil.VirtualTerminal
             X = VTProtocol.WriteSigned(x);
             Y = VTProtocol.WriteSigned(y);
         }
+
+        public static TerminalPosition operator +(TerminalPosition left, TerminalPosition right)
+        {
+            var leftX = VTProtocol.ReadSigned(left.X);
+            var leftY = VTProtocol.ReadSigned(left.Y);
+            var rightX = VTProtocol.ReadSigned(right.X);
+            var rightY = VTProtocol.ReadSigned(right.Y);
+            return new TerminalPosition(leftX + rightX, leftY + rightY);
+        }
     }
 }

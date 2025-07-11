@@ -127,7 +127,7 @@ namespace shellil.VirtualTerminal
                 if (_QueuedScrollOffset == null)
                     _QueuedScrollOffset = offset;
                 else
-                    _QueuedScrollOffset = new TerminalPosition(_QueuedScrollOffset.X, _QueuedScrollOffset.Y);
+                    _QueuedScrollOffset += offset;
             }
         }
 

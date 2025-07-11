@@ -134,6 +134,10 @@
         snapshot.lastFrameTime = uptime;
         let canv = vtcanvas.element;
         let ctx = vtcanvas.context;
+        ctx.textBaseline = "middle";
+        ctx.font = consts.font;
+        ctx.fontKerning = "none";
+        ctx.imageSmoothingEnabled = false;
 
         let canvasWidth = canv.width;
         let canvasHeight = canv.height;
