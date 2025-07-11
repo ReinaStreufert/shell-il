@@ -77,6 +77,10 @@ namespace shellil.VirtualTerminal
 
         public void Encode(MemoryStream16 ms)
         {
+            if (_BGInvalidated || _FGInvalidated || _PosInvalidated)
+            {
+                Write((char)0);
+            }
             ms.Write((ushort)_CommandCount);
             var textSegment = _Text[0];
             var bgcSegment = _BackgroundColor[0];

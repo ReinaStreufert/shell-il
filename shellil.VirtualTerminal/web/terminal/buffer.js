@@ -175,9 +175,12 @@
                 }
                 if (commandIndex == runLengthState.textchar.nextControlToken)
                     bufIndex = readControlToken(commandBuf, bufIndex, commandIndex, runLengthState.textchar);
-                if (commandIndex >= runLengthState.textchar.runLengthThreshold)
-                    runLengthState.nextCharacter = String.fromCharCode(commandBuf[bufIndex++]);
-                buf.write(runLengthState.nextCharacter);
+                if (commandIndex >= runLengthState.textchar.runLengthThreshold) {
+                    var charCode = commandBuf[bufIndex++];
+                    runLengthState.nextCharacter = charCode == 0 ? "" : String.fromCharCode(charCode);
+                }
+                if (runLengthState.nextCharacter.length > 0)
+                    buf.write(runLengthState.nextCharacter);
             }
         };
         buf.createViewport = function (xOffset, yOffset) {
