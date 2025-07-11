@@ -21,7 +21,7 @@ namespace shellil.VirtualTerminal
 
         public async Task OnReadyAsync(IVirtualTerminalContext ctx)
         {
-            var bufferWidth = Math.Max(200, _InitialBufferText.Select(l => l.Length).Max());
+            var bufferWidth = _InitialBufferText.Select(l => l.Length).Max();
             var buffer = await ctx.CreateBufferAsync(bufferWidth);
             await buffer.LineFeedAsync(_InitialBufferText.Length);
             for (int y = 0; y < _InitialBufferText.Length; y++)
