@@ -151,7 +151,7 @@ namespace shellil.VirtualTerminal
             return Task.CompletedTask;
         }
 
-        public Task SetCursorStyleAsync(TerminalCursorState cursorState)
+        public Task SetCursorStateAsync(TerminalCursorState cursorState)
         {
             lock (_QueueSync)
                 _QueuedCursorState = cursorState;

@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shellil", "shellil\shellil.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shellil.VirtualTerminal", "shellil.VirtualTerminal\shellil.VirtualTerminal.csproj", "{2D4BD66F-7677-4583-95EB-78A7F654BBF3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "shellil.Editor", "shellil.Editor\shellil.Editor.csproj", "{421A9883-83A4-4937-964D-8EE450C82E12}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{2D4BD66F-7677-4583-95EB-78A7F654BBF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D4BD66F-7677-4583-95EB-78A7F654BBF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2D4BD66F-7677-4583-95EB-78A7F654BBF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{421A9883-83A4-4937-964D-8EE450C82E12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{421A9883-83A4-4937-964D-8EE450C82E12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{421A9883-83A4-4937-964D-8EE450C82E12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{421A9883-83A4-4937-964D-8EE450C82E12}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

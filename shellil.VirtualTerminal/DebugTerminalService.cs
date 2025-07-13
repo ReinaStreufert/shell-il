@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace shellil.VirtualTerminal
 {
-    public class DebugTerminalService : IVirtualTerminalService
+    internal class DebugTerminalService : IVirtualTerminalService
     {
         public Task<IVirtualTerminalDriver> AttachDriverAsync()
         {

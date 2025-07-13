@@ -6,14 +6,18 @@ using System.Threading.Tasks;
 
 namespace shellil.VirtualTerminal
 {
-    public interface IVirtualTerminalDriver
+    public interface IVTInputHandler
     {
-        public Task OnReadyAsync(IVirtualTerminalContext ctx);
-        public Task OnViewportResizeAsync(int widthCols, int heightRows);
         public Task OnInputCharAsync(char inputChar, TerminalModifierKeys modifiers);
         public Task OnSpecialKeyAsync(TerminalSpecialKey key, TerminalModifierKeys modifiers);
         public Task OnUserScrollAsync(int deltaX, int deltaY);
         public Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y);
+    }
+
+    public interface IVirtualTerminalDriver : IVTInputHandler
+    {
+        public Task OnReadyAsync(IVirtualTerminalContext ctx);
+        public Task OnViewportResizeAsync(int widthCols, int heightRows);
     }
 
     public interface IVirtualTerminalService

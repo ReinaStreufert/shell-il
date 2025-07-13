@@ -46,7 +46,7 @@ namespace shellil.VirtualTerminal
         public Task ScrollToAsync(TerminalPosition scrollOffset);
         public Task ScrollAsync(int x, int y);
         public Task ScrollAsync(TerminalPosition offset);
-        public Task SetCursorStyleAsync(TerminalCursorState cursorState);
+        public Task SetCursorStateAsync(TerminalCursorState cursorState);
         public Task ScrollCursorIntoViewAsync();
         public Task PresentAsync();
         public Task FlushAsync();

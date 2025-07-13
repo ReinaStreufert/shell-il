@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace shellil.VirtualTerminal
 {
-    public class DebugTerminalDriver : IVirtualTerminalDriver
+    internal class DebugTerminalDriver : IVirtualTerminalDriver
     {
         public DebugTerminalDriver(string filePath)
         {
