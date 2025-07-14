@@ -137,7 +137,7 @@ namespace shellil.Editor
             }
         }
 
-        public void SetCursorFromHit(int hitPointX, int hitPointY)
+        public void SetCursorPositionFromHit(int hitPointX, int hitPointY)
         {
             lock (_Sync)
             {

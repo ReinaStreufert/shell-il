@@ -7,8 +7,23 @@ using System.Threading.Tasks;
 
 namespace shellil.Editor.UI
 {
-    public class FrameDriver : IVirtualTerminalDriver, IFrameDriver
+    public class FrameDriver : IFrameDriver
     {
+        public TerminalPosition ViewportSize
+        {
+            get
+            {
+                int w;
+                int h;
+                lock (_FrameSync)
+                {
+                    w = _ViewportWidth;
+                    h = _ViewportHeight;
+                }
+                return new TerminalPosition(w, h);
+            }
+        }
+
         public FrameDriver(ITerminalUIComponent[] compositeChain)
         {
             _CompositeChain = compositeChain;
@@ -25,10 +40,11 @@ namespace shellil.Editor.UI
         private object _FrameSync = new object();
         private Task? _ValidateTask = null;
 
-        public async Task OnReadyAsync(IVirtualTerminalContext ctx)
+        public Task OnReadyAsync(IVirtualTerminalContext ctx)
         {
             _TerminalContext = ctx;
-            await ValidateAsync();
+            EnsureValidated();
+            return Task.CompletedTask;
         }
 
         public async Task OnMouseEventAsync(TerminalMouseEventType type, int x, int y)
@@ -113,7 +129,7 @@ namespace shellil.Editor.UI
             InterlockedMax(ref _LastInvalidatedTime, DateTime.Now.Ticks);
         }
 
-        public void EnsureValidated()
+        private void EnsureValidated()
         {
             lock (_FrameSync)
             {
